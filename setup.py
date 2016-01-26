@@ -57,13 +57,18 @@ data_files_config(data_files, 'docs','src/docs/','*')
 #You must define a variable like the one below.
 #It will be used to collect entries without installing the package
 janitoo_entry_points = {
+    "janitoo.threads": [
+        "pigpio = janitoo_raspberry_gpio.thread_gpio:make_thread",
+    ],
     "janitoo.components": [
-        "rpii2c.bmp = janitoo_raspberry_i2c_bmp.bmp:make_bmp",
+        "pigpio.input = janitoo_raspberry_gpio.gpio:make_input",
+        "pigpio.output = janitoo_raspberry_gpio.gpio:make_output",
+        "pigpio.pwm = janitoo_raspberry_gpio.gpio:make_pwm",
     ],
 }
 
 setup(
-    name = 'janitoo_raspberry_i2c_bmp',
+    name = 'janitoo_raspberry_gpio',
     description = "A server which handle many controller (hardware, onewire, i2c, ...) dedicated to the raspberry",
     long_description = "A server which handle many controller (hardware, onewire, i2c, ...) dedicated to the raspberry",
     author='Sébastien GALLET aka bibi2100 <bibi21000@gmail.com>',
@@ -89,21 +94,18 @@ setup(
     zip_safe = False,
     packages = find_packages('src', exclude=["scripts", "docs", "config"]),
     package_dir = { '': 'src' },
-    keywords = "raspberry,i2c",
+    keywords = "raspberry,i2c, gpio",
     include_package_data=True,
     data_files = data_files,
     install_requires=[
                      'janitoo',
-                     'janitoo_raspberry_i2c',
-                     #~ 'janitoo_buses == %s'%janitoo_version,
+                     'janitoo_raspberry',
                      'Adafruit-GPIO',
-                     'Adafruit_BMP',
                     ],
     dependency_links = [
       'https://github.com/bibi21000/janitoo/archive/master.zip#egg=janitoo',
-      'https://github.com/bibi21000/janitoo_raspberry_i2c/archive/master.zip#egg=janitoo_raspberry_i2c',
+      'https://github.com/bibi21000/janitoo_raspberry/archive/master.zip#egg=janitoo_raspberry',
       'https://github.com/adafruit/Adafruit_Python_GPIO/archive/master.zip#egg=Adafruit-GPIO',
-      'https://github.com/adafruit/Adafruit_Python_BMP/archive/master.zip#egg=Adafruit_BMP',
     ],
     entry_points = janitoo_entry_points,
 )

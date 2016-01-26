@@ -62,7 +62,7 @@ class TestPiSerser(JNTTServer, JNTTServerCommon):
     broker_user = 'toto'
     broker_password = 'toto'
     server_class = PiServer
-    server_conf = "tests/data/janitoo_raspberry_i2c_bmp.conf"
+    server_conf = "tests/data/janitoo_raspberry_gpio.conf"
 
     def test_110_request_system_values(self):
         self.start()
