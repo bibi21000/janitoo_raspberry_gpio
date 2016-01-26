@@ -58,12 +58,12 @@ data_files_config(data_files, 'docs','src/docs/','*')
 #It will be used to collect entries without installing the package
 janitoo_entry_points = {
     "janitoo.threads": [
-        "pigpio = janitoo_raspberry_gpio.thread_gpio:make_thread",
+        "rpigpio = janitoo_raspberry_gpio.thread_gpio:make_thread",
     ],
     "janitoo.components": [
-        "pigpio.input = janitoo_raspberry_gpio.gpio:make_input",
-        "pigpio.output = janitoo_raspberry_gpio.gpio:make_output",
-        "pigpio.pwm = janitoo_raspberry_gpio.gpio:make_pwm",
+        "rpigpio.input = janitoo_raspberry_gpio.gpio:make_input",
+        "rpigpio.output = janitoo_raspberry_gpio.gpio:make_output",
+        "rpigpio.pwm = janitoo_raspberry_gpio.gpio:make_pwm",
     ],
 }
 
