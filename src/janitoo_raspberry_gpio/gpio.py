@@ -38,7 +38,10 @@ from janitoo.node import JNTNode
 from janitoo.value import JNTValue
 from janitoo.component import JNTComponent
 from janitoo.bus import JNTBus
-import RPi.GPIO as GPIO
+try:
+    import RPi.GPIO as GPIO
+except RuntimeError:
+    logger.exception('Can"t import GPIO')
 
 ##############################################################
 #Check that we are in sync with the official command classes

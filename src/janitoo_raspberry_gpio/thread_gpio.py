@@ -48,7 +48,7 @@ assert(COMMAND_DESC[COMMAND_CONTROLLER] == 'COMMAND_CONTROLLER')
 ##############################################################
 
 def make_thread(options):
-    if get_option_autostart(options, 'pigpio') == True:
+    if get_option_autostart(options, 'rpigpio') == True:
         return GpioThread(options)
     else:
         return None
