@@ -39,7 +39,7 @@ from janitoo.value import JNTValue
 from janitoo.component import JNTComponent
 from janitoo.bus import JNTBus
 try:
-    import RPi.GPIO as GPIO
+    import Adafruit_GPIO as GPIO
 except RuntimeError:
     logger.exception('Can"t import GPIO')
 
