@@ -98,21 +98,27 @@ class GpioBus(JNTBus):
         """Start the bus
         """
         JNTBus.start(self, mqttc, trigger_thread_reload_cb)
-        if self.values["boardmode"].data == "BCM":
-            GPIO.setmode(GPIO.BCM)
-        else:
-            GPIO.setmode(GPIO.BOARD)
+        try:
+            if self.values["boardmode"].data == "BCM":
+                GPIO.setmode(GPIO.BCM)
+            else:
+                GPIO.setmode(GPIO.BOARD)
+        except:
+            logger.exception("Exception when starting GPIO bus")
 
     def stop(self):
         """Stop the bus
         """
-        GPIO.cleanup()
+        try:
+            GPIO.cleanup()
+        except:
+            logger.exception("Exception when stopping GPIO bus")
         JNTBus.stop(self)
 
 class GpioComponent(JNTComponent):
     """ A generic component for gpio """
 
-    def __init__(self, bus=None, addr=None, **kwargs):
+    def __init__(self, **kwargs):
         """
         """
         oid = kwargs.pop('oid', 'rpigpio.generic')
@@ -120,8 +126,7 @@ class GpioComponent(JNTComponent):
         product_name = kwargs.pop('product_name', "GPIO")
         product_type = kwargs.pop('product_type', "Software")
         product_manufacturer = kwargs.pop('product_manufacturer', "Janitoo")
-        JNTComponent.__init__(self, oid=oid, bus=bus, addr=addr, name=name,
-                product_name=product_name, product_type=product_type, product_manufacturer="Janitoo", **kwargs)
+        JNTComponent.__init__(self, oid=oid, name=name, product_name=product_name, product_type=product_type, product_manufacturer=product_manufacturer, **kwargs)
         logger.debug("[%s] - __init__ node uuid:%s", self.__class__.__name__, self.uuid)
 
         uuid="pin"
@@ -135,15 +140,14 @@ class GpioComponent(JNTComponent):
 class InputComponent(GpioComponent):
     """ A resource ie /rrd """
 
-    def __init__(self, path='generic', bus=None, addr=None, **kwargs):
+    def __init__(self, **kwargs):
         """
         """
         self._inputs = {}
         oid = kwargs.pop('oid', 'rgpio.input')
         product_name = kwargs.pop('product_name', "Input GPIO")
         name = kwargs.pop('name', "Input GPIO")
-        GpioComponent.__init__(self, path, oid=oid, bus=bus, addr=addr, name=name,
-                product_name=product_name, **kwargs)
+        GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
         uuid="pullupdown"
         self.values[uuid] = self.value_factory['config_list'](options=self.options, uuid=uuid,
             node_uuid=self.uuid,
@@ -203,16 +207,19 @@ class InputComponent(GpioComponent):
         GpioComponent.start(self, mqttc)
         configs = len(self.values["pin"].get_index_configs())
         for config in range(configs):
-            pull_up_down = GPIO.PUD_DOWN if self.values['pullupdown'].instances[config]['data'] == "PUD_DOWN" else GPIO.PUD_UP
-            GPIO.setup(self.values["pin"].instances[config]['data'], GPIO.IN, pull_up_down=pull_up_down)
-            sedge = self.values['edge'].instances[config]['data']
-            if sedge == "RISING":
-                edge = GPIO.RISING
-            elif sedge == "FALLING":
-                edge = GPIO.FALLING
-            else:
-                edge = GPIO.BOTH
-            GPIO.add_event_detect(self.values["pin"].instances[config]['data'], edge, callback=self.trigger_status, bouncetime=self.values["bouncetime"].instances[config]['data'])
+            try:
+                pull_up_down = GPIO.PUD_DOWN if self.values['pullupdown'].instances[config]['data'] == "PUD_DOWN" else GPIO.PUD_UP
+                GPIO.setup(self.values["pin"].instances[config]['data'], GPIO.IN, pull_up_down=pull_up_down)
+                sedge = self.values['edge'].instances[config]['data']
+                if sedge == "RISING":
+                    edge = GPIO.RISING
+                elif sedge == "FALLING":
+                    edge = GPIO.FALLING
+                else:
+                    edge = GPIO.BOTH
+                GPIO.add_event_detect(self.values["pin"].instances[config]['data'], edge, callback=self.trigger_status, bouncetime=self.values["bouncetime"].instances[config]['data'])
+            except:
+                logger.exception("Exception when starting GPIO component")
         return True
 
     def stop(self):
@@ -221,22 +228,24 @@ class InputComponent(GpioComponent):
         """
         configs = len(self.values["pin"].get_index_configs())
         for config in range(configs):
-            GPIO.remove_event_detect(self.values["pin"].instances[config]['data'])
+            try:
+                GPIO.remove_event_detect(self.values["pin"].instances[config]['data'])
+            except:
+                logger.exception("Exception when stopping GPIO component")
         GpioComponent.stop(self)
         return True
 
-class OuputComponent(GpioComponent):
+class OutputComponent(GpioComponent):
     """ A resource ie /rrd """
 
-    def __init__(self, path='generic', bus=None, addr=None, **kwargs):
+    def __init__(self, **kwargs):
         """
         """
         self._inputs = {}
         oid = kwargs.pop('oid', 'rgpio.output')
         product_name = kwargs.pop('product_name', "Output GPIO")
         name = kwargs.pop('name', "Output GPIO")
-        GpioComponent.__init__(self, path, oid=oid, bus=bus, addr=addr, name=name,
-                product_name=product_name, **kwargs)
+        GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
         uuid="state"
         self.values[uuid] = self.value_factory['action_boolean'](options=self.options, uuid=uuid,
             node_uuid=self.uuid,
@@ -254,7 +263,10 @@ class OuputComponent(GpioComponent):
         GpioComponent.start(self, mqttc)
         configs = len(self.values["pin"].get_index_configs())
         for config in range(configs):
-            GPIO.setup(self.values["pin"].instances[config]['data'], GPIO.OUT)
+            try:
+                GPIO.setup(self.values["pin"].instances[config]['data'], GPIO.OUT)
+            except:
+                logger.exception("Exception when starting GPIO component")
         return True
 
     def stop(self):
@@ -268,10 +280,13 @@ class OuputComponent(GpioComponent):
         """
         """
         if index in self._inputs:
-            if data == True or data == 1:
-                GPIO.setup(self.values["pin"].instances[config]['data'], GPIO.HIGH)
-            else:
-                GPIO.setup(self.values["pin"].instances[config]['data'], GPIO.LOW)
+            try:
+                if data == True or data == 1:
+                    GPIO.setup(self.values["pin"].instances[config]['data'], GPIO.HIGH)
+                else:
+                    GPIO.setup(self.values["pin"].instances[config]['data'], GPIO.LOW)
+            except:
+                logger.exception("Exception when updating GPIO component")
 
 class PwmComponent(GpioComponent):
     """ A resource ie /rrd """

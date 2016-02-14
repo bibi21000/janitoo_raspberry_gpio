@@ -62,6 +62,15 @@ class TestPiSerser(JNTTServer, JNTTServerCommon):
     server_class = PiServer
     server_conf = "tests/data/janitoo_raspberry_gpio.conf"
 
+    def test_101_wait_for_all_nodes(self):
+        self.start()
+        try:
+            self.assertHeartbeatNode(hadd=HADD%(145,0))
+            self.assertHeartbeatNode(hadd=HADD%(145,1))
+            self.assertHeartbeatNode(hadd=HADD%(145,2))
+        finally:
+            self.stop()
+
     def test_111_server_start_no_error_in_log(self):
         self.onlyRasperryTest()
         self.start()
@@ -72,3 +81,13 @@ class TestPiSerser(JNTTServer, JNTTServerCommon):
         finally:
             self.stop()
 
+    def test_112_request_nodes_and_values(self):
+        self.onlyRasperryTest()
+        self.start()
+        try:
+            self.assertHeartbeatNode()
+            time.sleep(5)
+            for request in NETWORK_REQUESTS:
+                self.assertNodeRequest(cmd_class=COMMAND_DISCOVERY, uuid=request, node_hadd=HADD%(145,0), client_hadd=HADD%(9999,0))
+        finally:
+            self.stop()

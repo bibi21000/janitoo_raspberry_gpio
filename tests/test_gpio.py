@@ -42,6 +42,7 @@ from janitoo.utils import TOPIC_BROADCAST_REPLY, TOPIC_BROADCAST_REQUEST
 from janitoo.utils import TOPIC_VALUES_USER, TOPIC_VALUES_CONFIG, TOPIC_VALUES_SYSTEM, TOPIC_VALUES_BASIC
 
 from janitoo_raspberry_gpio.thread_gpio import GpioThread
+import janitoo_raspberry_gpio.gpio
 
 ##############################################################
 #Check that we are in sync with the official command classes
@@ -52,8 +53,6 @@ COMMAND_DISCOVERY = 0x5000
 
 assert(COMMAND_DESC[COMMAND_DISCOVERY] == 'COMMAND_DISCOVERY')
 ##############################################################
-
-JNTTComponent.onlyRasperryTest()
 
 class TesGpioComponentInput(JNTTComponent, JNTTComponentCommon):
     """Test the component
