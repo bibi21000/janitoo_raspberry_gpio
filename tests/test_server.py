@@ -65,9 +65,7 @@ class TestPiSerser(JNTTServer, JNTTServerCommon):
     def test_101_wait_for_all_nodes(self):
         self.start()
         try:
-            self.assertHeartbeatNode(hadd=HADD%(145,0))
-            self.assertHeartbeatNode(hadd=HADD%(145,1))
-            self.assertHeartbeatNode(hadd=HADD%(145,2))
+            self.assertHeartbeatNodes(hadds=[HADD%(145,0), HADD%(145,1), HADD%(145,2)])
         finally:
             self.stop()
 
@@ -82,7 +80,6 @@ class TestPiSerser(JNTTServer, JNTTServerCommon):
             self.stop()
 
     def test_112_request_nodes_and_values(self):
-        self.onlyRasperryTest()
         self.start()
         try:
             self.assertHeartbeatNode()
