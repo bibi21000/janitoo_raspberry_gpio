@@ -63,13 +63,6 @@ class TestPiSerser(JNTTServer, JNTTServerCommon):
     server_conf = "tests/data/janitoo_raspberry_gpio.conf"
     hadds = [HADD%(145,0), HADD%(145,1), HADD%(145,2)]
 
-    def test_101_server_start_no_error_in_log(self):
+    def test_040_server_start_no_error_in_log(self):
         self.onlyRasperryTest()
-        self.start()
-        try:
-            time.sleep(120)
-        finally:
-            self.stop()
-        self.assertNotInLogfile('^ERROR ')
-        self.assertInLogfile('Found heartbeats in timeout')
-
+        JNTTServer.test_040_server_start_no_error_in_log(self)
