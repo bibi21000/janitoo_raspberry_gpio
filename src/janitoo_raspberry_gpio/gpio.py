@@ -66,6 +66,9 @@ def make_output(**kwargs):
 def make_pwm(**kwargs):
     return PwmComponent(**kwargs)
 
+def make_pir(**kwargs):
+    return PirComponent(**kwargs)
+
 class GpioBus(JNTBus):
     """A bus to manage GPIO
     """
@@ -138,7 +141,7 @@ class GpioComponent(JNTComponent):
         )
 
 class InputComponent(GpioComponent):
-    """ A resource ie /rrd """
+    """ An input gpio """
 
     def __init__(self, **kwargs):
         """
@@ -154,7 +157,7 @@ class InputComponent(GpioComponent):
             help='Use a pull up or a pull down',
             label='Pull Up/Down',
             default='PUD_UP',
-            list_items=['PUD_UP', 'PUD_DOWN'],
+            list_items=['PUD_UP', 'PUD_DOWN', 'NONE'],
         )
         uuid="edge"
         self.values[uuid] = self.value_factory['config_list'](options=self.options, uuid=uuid,
@@ -208,7 +211,12 @@ class InputComponent(GpioComponent):
         configs = len(self.values["pin"].get_index_configs())
         for config in range(configs):
             try:
-                pull_up_down = GPIO.PUD_DOWN if self.values['pullupdown'].instances[config]['data'] == "PUD_DOWN" else GPIO.PUD_UP
+                if self.values['pullupdown'].instances[config]['data'] == "PUD_DOWN":
+                    pull_up_down = GPIO.PUD_DOWN
+                elif self.values['pullupdown'].instances[config]['data'] == "PUD_UP":
+                    pull_up_down = GPIO.PUD_UP
+                else :
+                    pull_up_down = None
                 GPIO.setup(self.values["pin"].instances[config]['data'], GPIO.IN, pull_up_down=pull_up_down)
                 sedge = self.values['edge'].instances[config]['data']
                 if sedge == "RISING":
@@ -233,6 +241,39 @@ class InputComponent(GpioComponent):
             except:
                 logger.exception("Exception when stopping GPIO component")
         GpioComponent.stop(self)
+        return True
+
+class PirComponent(InputComponent):
+    """ A PIR motion sensor """
+
+    def __init__(self, **kwargs):
+        """
+        """
+        self._inputs = {}
+        oid = kwargs.pop('oid', 'rgpio.pir')
+        product_name = kwargs.pop('product_name', "PIR sensor")
+        name = kwargs.pop('name', "PIR sensor")
+        InputComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
+
+    def start(self, mqttc):
+        """Start the component.
+
+        """
+        InputComponent.start(self, mqttc)
+        configs = len(self.values["pin"].get_index_configs())
+        for config in range(configs):
+            try:
+                if self.values['pullupdown'].instances[config]['data'] == "PUD_DOWN":
+                    pull_up_down = GPIO.PUD_DOWN
+                elif self.values['pullupdown'].instances[config]['data'] == "PUD_UP":
+                    pull_up_down = GPIO.PUD_UP
+                else :
+                    pull_up_down = None
+                GPIO.setup(self.values["pin"].instances[config]['data'], GPIO.IN, pull_up_down=pull_up_down)
+                while GPIO.input(self.values["pin"].instances[config]['data'])==1:
+                    self.values["status"].instances[config]['data'] = 0
+            except:
+                logger.exception("Exception when starting PIR component")
         return True
 
 class OutputComponent(GpioComponent):

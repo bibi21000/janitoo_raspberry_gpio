@@ -63,6 +63,7 @@ janitoo_entry_points = {
     "janitoo.components": [
         "rpigpio.input = janitoo_raspberry_gpio.gpio:make_input",
         "rpigpio.output = janitoo_raspberry_gpio.gpio:make_output",
+        "rpigpio.pir = janitoo_raspberry_gpio.gpio:make_pir",
         "rpigpio.pwm = janitoo_raspberry_gpio.gpio:make_pwm",
     ],
 }
