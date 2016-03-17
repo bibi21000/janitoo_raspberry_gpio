@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The Raspberry http thread
-
-Server files using the http protocol
+"""The Raspberry GPIO components
 
 """
 
@@ -29,6 +27,7 @@ __copyright__ = "Copyright © 2013-2014-2015 Sébastien GALLET aka bibi21000"
 import logging
 logger = logging.getLogger(__name__)
 import os, sys
+import time
 import threading
 
 from janitoo.thread import JNTBusThread, BaseThread
@@ -69,6 +68,9 @@ def make_pwm(**kwargs):
 def make_pir(**kwargs):
     return PirComponent(**kwargs)
 
+def make_sonic(**kwargs):
+    return SonicComponent(**kwargs)
+
 class GpioBus(JNTBus):
     """A bus to manage GPIO
     """
@@ -78,7 +80,7 @@ class GpioBus(JNTBus):
         """
         JNTBus.__init__(self, **kwargs)
         self._lock =  threading.Lock()
-
+	self.gpio = GPIO.get_platform_gpio()
         uuid="boardmode"
         self.values[uuid] = self.value_factory['config_list'](options=self.options, uuid=uuid,
             node_uuid=self.uuid,
@@ -93,7 +95,7 @@ class GpioBus(JNTBus):
 
         """
         #~ print "it's me %s : %s" % (self.values['upsname'].data, self._ups_stats_last)
-        if GPIO.RPI_INFO['P1_REVISION']>0:
+        if self.gpio.RPI_INFO['P1_REVISION']>0:
             return True
         return False
 
@@ -102,10 +104,11 @@ class GpioBus(JNTBus):
         """
         JNTBus.start(self, mqttc, trigger_thread_reload_cb)
         try:
-            if self.values["boardmode"].data == "BCM":
-                GPIO.setmode(GPIO.BCM)
-            else:
-                GPIO.setmode(GPIO.BOARD)
+            #if self.values["boardmode"].data == "BCM":
+            #    self.gpio.setmode(self.gpio.BCM)
+            #else:
+            #    self.gpio.setmode(self.gpio.BOARD)
+	    pass
         except:
             logger.exception("Exception when starting GPIO bus")
 
@@ -113,7 +116,7 @@ class GpioBus(JNTBus):
         """Stop the bus
         """
         try:
-            GPIO.cleanup()
+            self.gpio.cleanup()
         except:
             logger.exception("Exception when stopping GPIO bus")
         JNTBus.stop(self)
@@ -137,7 +140,7 @@ class GpioComponent(JNTComponent):
             node_uuid=self.uuid,
             help='The pin number on the board',
             label='Pin',
-            default=1,
+            default=kwargs.pop('pin', 1),
         )
 
 class InputComponent(GpioComponent):
@@ -156,7 +159,7 @@ class InputComponent(GpioComponent):
             node_uuid=self.uuid,
             help='Use a pull up or a pull down',
             label='Pull Up/Down',
-            default='PUD_UP',
+            default=kwargs.pop('pulldown', 'PUD_UP'),
             list_items=['PUD_UP', 'PUD_DOWN', 'NONE'],
         )
         uuid="edge"
@@ -164,7 +167,7 @@ class InputComponent(GpioComponent):
             node_uuid=self.uuid,
             help='Edge to use (rising or falling)',
             label='Edge',
-            default='BOTH',
+            default=kwargs.pop('edge','BOTH'),
             list_items=['BOTH', 'RISING', 'FALLING'],
         )
         uuid="bouncetime"
@@ -172,7 +175,7 @@ class InputComponent(GpioComponent):
             node_uuid=self.uuid,
             help='Bouncetime should be specified in milliseconds',
             label='bouncetime',
-            default=200,
+            default=kwargs.pop('bouncetime', 200),
         )
         uuid="trigger"
         self.values[uuid] = self.value_factory['config_boolean'](options=self.options, uuid=uuid,
@@ -201,6 +204,7 @@ class InputComponent(GpioComponent):
     def trigger_status(self, channel):
         """
         """
+	self._inputs[index]['value'] = self._bus.gpio.input(self.values["pin"].instances[config]['data'])
         self.node.publish_poll(None, self.values['status'])
 
     def start(self, mqttc):
@@ -217,7 +221,7 @@ class InputComponent(GpioComponent):
                     pull_up_down = GPIO.PUD_UP
                 else :
                     pull_up_down = None
-                GPIO.setup(self.values["pin"].instances[config]['data'], GPIO.IN, pull_up_down=pull_up_down)
+                self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.IN, pull_up_down=pull_up_down)
                 sedge = self.values['edge'].instances[config]['data']
                 if sedge == "RISING":
                     edge = GPIO.RISING
@@ -225,7 +229,7 @@ class InputComponent(GpioComponent):
                     edge = GPIO.FALLING
                 else:
                     edge = GPIO.BOTH
-                GPIO.add_event_detect(self.values["pin"].instances[config]['data'], edge, callback=self.trigger_status, bouncetime=self.values["bouncetime"].instances[config]['data'])
+                self._bus.gpio.add_event_detect(self.values["pin"].instances[config]['data'], edge, callback=self.trigger_status, bouncetime=self.values["bouncetime"].instances[config]['data'])
             except:
                 logger.exception("Exception when starting GPIO component")
         return True
@@ -263,17 +267,146 @@ class PirComponent(InputComponent):
         configs = len(self.values["pin"].get_index_configs())
         for config in range(configs):
             try:
-                if self.values['pullupdown'].instances[config]['data'] == "PUD_DOWN":
-                    pull_up_down = GPIO.PUD_DOWN
-                elif self.values['pullupdown'].instances[config]['data'] == "PUD_UP":
-                    pull_up_down = GPIO.PUD_UP
-                else :
-                    pull_up_down = None
-                GPIO.setup(self.values["pin"].instances[config]['data'], GPIO.IN, pull_up_down=pull_up_down)
-                while GPIO.input(self.values["pin"].instances[config]['data'])==1:
+                while self._bus.gpio.input(self.values["pin"].instances[config]['data'])==1:
                     self.values["status"].instances[config]['data'] = 0
             except:
                 logger.exception("Exception when starting PIR component")
+        return True
+
+class SonicComponent(InputComponent):
+    """ A Sonic sensor (HC-SR04)"""
+
+    def __init__(self, **kwargs):
+        """
+        """
+        self._inputs = {}
+        oid = kwargs.pop('oid', 'rgpio.sonic')
+        product_name = kwargs.pop('product_name', "Sonic sensor")
+        name = kwargs.pop('name', "Sonic sensori (HC-SR04)")
+        InputComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
+	del self.values['pin']
+        uuid="pin_trig"
+        self.values[uuid] = self.value_factory['config_integer'](options=self.options, uuid=uuid,
+            node_uuid=self.uuid,
+            help='The pin number on the board for the trigger',
+            label='Trig',
+            default=kwargs.pop('pin_trig', 20),
+        )
+
+        uuid="pin_echo"
+        self.values[uuid] = self.value_factory['config_integer'](options=self.options, uuid=uuid,
+            node_uuid=self.uuid,
+            help='The pin number on the board for the echo',
+            label='Echo',
+            default=kwargs.pop('pin_echo', 21),
+        )
+        self.check_timer = None
+        uuid="timer_delay"
+        self.values[uuid] = self.value_factory['config_integer'](options=self.options, uuid=uuid,
+            node_uuid=self.uuid,
+            help='The delay between 2 checks',
+            label='Timer.',
+            default=kwargs.pop('timer_delay', 5),
+        )
+	self.echo_start = None
+	self.echo_stop = None
+
+    def stop_check(self):
+        """Check the sonic component
+
+        """
+        if self.check_timer is not None:
+            self.check_timer.cancel()
+            self.check_timer = None
+
+    def on_check(self):
+        """Make a check using a timer.
+
+        """
+        self.stop_check()
+        if self.check_timer is None:
+            self.check_timer = threading.Timer(self.values['timer_delay'].data, self.on_check)
+            self.check_timer.start()
+        state = True
+        #if self._bus.nodeman.is_started:
+	self.send_trigger()
+
+    def send_trigger(self):
+        """Make a check using a timer.
+
+        """
+        configs = len(self.values["pin_echo"].get_index_configs())
+	if configs == 0:
+            try:
+		# Send 10us pulse to trigger
+		self._bus.gpio.output(self.values["pin_trig"].data, GPIO.HIGH)
+        	time.sleep(0.00001)
+	        self._bus.gpio.output(self.values["pin_trig"].data, GPIO.LOW)
+	        self.echo_start = time.time()
+	        logger.debug("[%s] - Send trigger", self.__class__.__name__)
+            except:
+                logger.exception("Exception when starting sonic component")
+	else:
+	    for config in range(configs):
+                try:
+		    # Send 10us pulse to trigger
+		    self._bus.gpio.output(self.values["pin_trig"].instances[config]['data'], GPIO.HIGH)
+        	    time.sleep(0.00001)
+	            self._bus.gpio.output(self.values["pin_trig"].instances[config]['data'], GPIO.LOW)
+	            self.echo_start = time.time()
+	            logger.debug("[%s] - Send trigger", self.__class__.__name__)
+                except:
+                    logger.exception("Exception when starting sonic component")
+
+    def start(self, mqttc):
+        """Start the component.
+
+        """
+        GpioComponent.start(self, mqttc)
+        configs = len(self.values["pin_echo"].get_index_configs())
+	if configs == 0:
+	    try:
+                self._bus.gpio.setup(self.values["pin_trig"].data, GPIO.OUT)
+                self._bus.gpio.setup(self.values["pin_echo"].data, GPIO.IN)
+                self._bus.gpio.output(self.values["pin_trig"].data, GPIO.LOW)
+                self._bus.gpio.add_event_detect(self.values["pin_echo"].data, GPIO.RISING, callback=self.callback_echo, bouncetime=self.values["bouncetime"].data)
+		logger.debug("[%s] - start sonic component on trigger pin %s and echo pin %s", self.__class__.__name__, self.values["pin_trig"].data, self.values["pin_echo"].data)
+            except:
+                logger.exception("Exception when starting sonic component")
+	else:
+            for config in range(configs):
+	        print "config :", config
+                try:
+                    self._bus.gpio.setup(self.values["pin_trig"].instances[config]['data'], GPIO.OUT)
+                    self._bus.gpio.setup(self.values["pin_echo"].instances[config]['data'], GPIO.IN)
+                    self._bus.gpio.output(self.values["pin_trig"].instances[config]['data'], GPIO.LOW)
+                    self._bus.gpio.add_event_detect(self.values["pin_echo"].instances[config]['data'], GPIO.RISING, callback=self.callback_echo, bouncetime=self.values["bouncetime"].instances[config]['data'])
+                except:
+                    logger.exception("Exception when starting sonic component")
+	self.on_check()
+        return True
+
+    def callback_echo(self, channel):
+        """
+        """
+	self.echo_stop = time.time()
+	elapsed = self.echo_stop - self.echo_start
+	dist = elapsed * 34000.0 / 2
+	self._inputs[0]['value'] = dist
+	logger.debug("[%s] - callback_echo distance : %s cm on channel %s", self.__class__.__name__, dist, channel)
+
+    def stop(self):
+        """Stop the component.
+
+        """
+	self.stop_check()
+        configs = len(self.values["pin_echo"].get_index_configs())
+        for config in range(configs):
+            try:
+                self._bus.gpio.remove_event_detect(self.values["pin_echo"].instances[config]['data'])
+            except:
+                logger.exception("Exception when stopping sonic component")
+        GpioComponent.stop(self)
         return True
 
 class OutputComponent(GpioComponent):
@@ -305,7 +438,7 @@ class OutputComponent(GpioComponent):
         configs = len(self.values["pin"].get_index_configs())
         for config in range(configs):
             try:
-                GPIO.setup(self.values["pin"].instances[config]['data'], GPIO.OUT)
+                self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.OUT)
             except:
                 logger.exception("Exception when starting GPIO component")
         return True
@@ -323,9 +456,9 @@ class OutputComponent(GpioComponent):
         if index in self._inputs:
             try:
                 if data == True or data == 1:
-                    GPIO.setup(self.values["pin"].instances[config]['data'], GPIO.HIGH)
+                    self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.HIGH)
                 else:
-                    GPIO.setup(self.values["pin"].instances[config]['data'], GPIO.LOW)
+                    self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.LOW)
             except:
                 logger.exception("Exception when updating GPIO component")
 

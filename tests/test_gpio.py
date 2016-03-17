@@ -61,3 +61,25 @@ class TesGpioComponentPwm(JNTTComponent, JNTTComponentCommon):
     """Test the component
     """
     component_name = "rpigpio.pwm"
+
+class TesGpioComponentiPir(JNTTComponent, JNTTComponentCommon):
+    """Test the component
+    """
+    component_name = "rpigpio.pir"
+
+class TesGpioComponentSonic(JNTTComponent, JNTTComponentCommon):
+    """Test the component
+    """
+    component_name = "rpigpio.sonic"
+
+    def test_101_read_distance(self):
+        self.onlyRasperryTest()
+        comp = self.factory[self.component_name]()
+        comp.start(None)
+        comp.send_trigger()
+	time.sleep(10)
+	dist = comp.values['status'].data
+        self.assertNotEqual(dist, None)
+        self.assertTrue(comp.check_heartbeat())
+
+
