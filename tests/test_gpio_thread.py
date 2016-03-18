@@ -35,6 +35,7 @@ from pkg_resources import iter_entry_points
 
 from janitoo_nosetests.server import JNTTServer, JNTTServerCommon
 from janitoo_nosetests.thread import JNTTThread, JNTTThreadCommon
+from janitoo_nosetests.thread import JNTTThreadRun, JNTTThreadRunCommon
 from janitoo_nosetests.component import JNTTComponent, JNTTComponentCommon
 
 from janitoo.utils import json_dumps, json_loads
@@ -46,7 +47,15 @@ from janitoo.utils import TOPIC_VALUES_USER, TOPIC_VALUES_CONFIG, TOPIC_VALUES_S
 
 from janitoo_raspberry_gpio.thread_gpio import GpioThread
 
-class TestGpioThread(JNTTThread, JNTTThreadCommon):
+class TestGpioThread(JNTTThreadRun, JNTTThreadRunCommon):
     """Test the thread
     """
     thread_name = "rpigpio"
+    conf_file = "tests/data/janitoo_raspberry_gpio.conf"
+
+    def test_101_thread_start_wait_long_stop(self):
+        #~ self.skipTest("Fail on docker")
+        self.thread.start()
+        time.sleep(60)
+        #~ self.assertDir("/tmp/janitoo_test/home/public")
+

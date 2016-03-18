@@ -147,7 +147,7 @@ class InputComponent(GpioComponent):
         """
         """
         self._inputs = {}
-        oid = kwargs.pop('oid', 'rgpio.input')
+        oid = kwargs.pop('oid', 'rpigpio.input')
         product_name = kwargs.pop('product_name', "Input GPIO")
         name = kwargs.pop('name', "Input GPIO")
         GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
@@ -251,7 +251,7 @@ class PirComponent(InputComponent):
         """
         """
         self._inputs = {}
-        oid = kwargs.pop('oid', 'rgpio.pir')
+        oid = kwargs.pop('oid', 'rpigpio.pir')
         product_name = kwargs.pop('product_name', "PIR sensor")
         name = kwargs.pop('name', "PIR sensor")
         InputComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
@@ -277,7 +277,7 @@ class SonicComponent(InputComponent):
         """
         """
         self._inputs = {}
-        oid = kwargs.pop('oid', 'rgpio.sonic')
+        oid = kwargs.pop('oid', 'rpigpio.sonic')
         product_name = kwargs.pop('product_name', "Sonic sensor")
         name = kwargs.pop('name', "Sonic sensori (HC-SR04)")
         InputComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
@@ -335,25 +335,27 @@ class SonicComponent(InputComponent):
         configs = len(self.values["pin_echo"].get_index_configs())
         if configs == 0:
             try:
-                # Send 10us pulse to trigger
-                self._bus.gpio.output(self.values["pin_trig"].data, GPIO.HIGH)
-                time.sleep(0.00001)
-                self._bus.gpio.output(self.values["pin_trig"].data, GPIO.LOW)
-                self.echo_start = time.time()
-                logger.debug("[%s] - Send trigger", self.__class__.__name__)
+                self.trigger_sonic(self._bus.gpio, self.values["pin_trig"].data)
             except:
                 logger.exception("Exception when starting sonic component")
         else:
             for config in range(configs):
                 try:
                     # Send 10us pulse to trigger
-                    self._bus.gpio.output(self.values["pin_trig"].instances[config]['data'], GPIO.HIGH)
-                    time.sleep(0.00001)
-                    self._bus.gpio.output(self.values["pin_trig"].instances[config]['data'], GPIO.LOW)
-                    self.echo_start = time.time()
-                    logger.debug("[%s] - Send trigger", self.__class__.__name__)
+                    self.trigger_sonic(self._bus.gpio, self.values["pin_trig"].instances[config]['data'])
                 except:
                     logger.exception("Exception when starting sonic component")
+
+    def trigger_sonic(self, gpio, pin_trig ):
+        try:
+            # Send 10us pulse to trigger
+            gpio.output(pin_trig, GPIO.HIGH)
+            time.sleep(0.00001)
+            gpio.output(pin_trig, GPIO.LOW)
+            self.echo_start = time.time()
+            logger.debug("[%s] - Send trigger", self.__class__.__name__)
+        except:
+            logger.exception("Exception when starting sonic component")
 
     def start(self, mqttc):
         """Start the component.
@@ -363,32 +365,52 @@ class SonicComponent(InputComponent):
         configs = len(self.values["pin_echo"].get_index_configs())
         if configs == 0:
             try:
-                self._bus.gpio.setup(self.values["pin_trig"].data, GPIO.OUT)
-                self._bus.gpio.setup(self.values["pin_echo"].data, GPIO.IN)
-                self._bus.gpio.output(self.values["pin_trig"].data, GPIO.LOW)
-                self._bus.gpio.add_event_detect(self.values["pin_echo"].data, GPIO.RISING, callback=self.callback_echo, bouncetime=self.values["bouncetime"].data)
-                logger.debug("[%s] - start sonic component on trigger pin %s and echo pin %s", self.__class__.__name__, self.values["pin_trig"].data, self.values["pin_echo"].data)
+                self.setup_sonic( self._bus.gpio, \
+                                  self.values["pin_trig"].data, \
+                                  self.values["pin_echo"].data, \
+                                  GPIO.BOTH, \
+                                  self.callback_echo, \
+                                  self.values["bouncetime"].data)
             except:
                 logger.exception("Exception when starting sonic component")
         else:
             for config in range(configs):
                 print "config :", config
                 try:
-                    self._bus.gpio.setup(self.values["pin_trig"].instances[config]['data'], GPIO.OUT)
-                    self._bus.gpio.setup(self.values["pin_echo"].instances[config]['data'], GPIO.IN)
-                    self._bus.gpio.output(self.values["pin_trig"].instances[config]['data'], GPIO.LOW)
-                    self._bus.gpio.add_event_detect(self.values["pin_echo"].instances[config]['data'], GPIO.RISING, callback=self.callback_echo, bouncetime=self.values["bouncetime"].instances[config]['data'])
+                    self.setup_sonic( self._bus.gpio, \
+                                      self.values["pin_trig"].instances[config]['data'], \
+                                      self.values["pin_echo"].instances[config]['data'], \
+                                      GPIO.RISING, \
+                                      self.callback_echo, \
+                                      self.values["bouncetime"].instances[config]['data'])
                 except:
                     logger.exception("Exception when starting sonic component")
         self.on_check()
         return True
 
+    def setup_sonic(self, gpio, pin_trig, pin_echo, edge, callback, bouncetime ):
+        try:
+            gpio.setup(pin_trig, GPIO.OUT)
+            gpio.setup(pin_echo, GPIO.IN)
+            gpio.output(pin_trig, GPIO.LOW)
+            while gpio.input(pin_echo) == GPIO.HIGH:
+                time.sleep(0.1)
+            gpio.add_event_detect(pin_echo, edge, callback=callback, bouncetime=bouncetime)
+            logger.debug("[%s] - start sonic component on trigger pin %s and echo pin %s", self.__class__.__name__, pin_trig, pin_echo)
+        except:
+            logger.exception("Exception when starting sonic component")
+
     def callback_echo(self, channel):
         """
         """
+        print "callback received"
+        if self.echo_start is None:
+            return
         self.echo_stop = time.time()
         elapsed = self.echo_stop - self.echo_start
         dist = elapsed * 34000.0 / 2
+        if 0 not in self._inputs:
+            self._inputs[0] = {}
         self._inputs[0]['value'] = dist
         logger.debug("[%s] - callback_echo distance : %s cm on channel %s", self.__class__.__name__, dist, channel)
 
@@ -413,7 +435,7 @@ class OutputComponent(GpioComponent):
         """
         """
         self._inputs = {}
-        oid = kwargs.pop('oid', 'rgpio.output')
+        oid = kwargs.pop('oid', 'rpigpio.output')
         product_name = kwargs.pop('product_name', "Output GPIO")
         name = kwargs.pop('name', "Output GPIO")
         GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)

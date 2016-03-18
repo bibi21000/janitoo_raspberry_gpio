@@ -47,27 +47,32 @@ from janitoo.utils import TOPIC_VALUES_USER, TOPIC_VALUES_CONFIG, TOPIC_VALUES_S
 from janitoo_raspberry_gpio.thread_gpio import GpioThread
 import janitoo_raspberry_gpio.gpio
 
-class TesGpioComponentInput(JNTTComponent, JNTTComponentCommon):
+try:
+    import Adafruit_GPIO as GPIO
+except:
+    logger.exception('Can"t import GPIO')
+
+class TestGpioComponentInput(JNTTComponent, JNTTComponentCommon):
     """Test the component
     """
     component_name = "rpigpio.input"
 
-class TesGpioComponentOutput(JNTTComponent, JNTTComponentCommon):
+class TestGpioComponentOutput(JNTTComponent, JNTTComponentCommon):
     """Test the component
     """
     component_name = "rpigpio.output"
 
-class TesGpioComponentPwm(JNTTComponent, JNTTComponentCommon):
+class TestGpioComponentPwm(JNTTComponent, JNTTComponentCommon):
     """Test the component
     """
     component_name = "rpigpio.pwm"
 
-class TesGpioComponentiPir(JNTTComponent, JNTTComponentCommon):
+class TestGpioComponentiPir(JNTTComponent, JNTTComponentCommon):
     """Test the component
     """
     component_name = "rpigpio.pir"
 
-class TesGpioComponentSonic(JNTTComponent, JNTTComponentCommon):
+class TestGpioComponentSonic(JNTTComponent, JNTTComponentCommon):
     """Test the component
     """
     component_name = "rpigpio.sonic"
@@ -75,11 +80,14 @@ class TesGpioComponentSonic(JNTTComponent, JNTTComponentCommon):
     def test_101_read_distance(self):
         self.onlyRasperryTest()
         comp = self.factory[self.component_name]()
-        comp.start(None)
-        comp.send_trigger()
-        time.sleep(10)
+        gpio = GPIO.get_platform_gpio()
+        comp.setup_sonic(gpio, 20, 21, GPIO.RISING, comp.callback_echo, 200)
+        #~ comp.trigger_sonic(gpio, 20)
+        time.sleep(1)
         dist = comp.values['status'].data
+        print "distance", dist
         self.assertNotEqual(dist, None)
         self.assertTrue(comp.check_heartbeat())
+        gpio.cleanup()
 
 
