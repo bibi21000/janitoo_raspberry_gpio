@@ -47,8 +47,12 @@ COMMAND_CONTROLLER = 0x1050
 assert(COMMAND_DESC[COMMAND_CONTROLLER] == 'COMMAND_CONTROLLER')
 ##############################################################
 
+OID = 'rpigpio'
+
 def make_thread(options):
-    if get_option_autostart(options, 'rpigpio') == True:
+    print "It's me"
+    if get_option_autostart(options, OID) == True:
+        print "It's me"
         return GpioThread(options)
     else:
         return None
@@ -61,5 +65,5 @@ class GpioThread(JNTBusThread):
         """Build the bus
         """
         from janitoo_raspberry_gpio.gpio import GpioBus
-        self.section = 'rpigpio'
+        self.section = OID
         self.bus = GpioBus(options=self.options, oid=self.section, product_name="Raspberry GPIO controller")

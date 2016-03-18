@@ -77,8 +77,8 @@ class TesGpioComponentSonic(JNTTComponent, JNTTComponentCommon):
         comp = self.factory[self.component_name]()
         comp.start(None)
         comp.send_trigger()
-	time.sleep(10)
-	dist = comp.values['status'].data
+        time.sleep(10)
+        dist = comp.values['status'].data
         self.assertNotEqual(dist, None)
         self.assertTrue(comp.check_heartbeat())
 
