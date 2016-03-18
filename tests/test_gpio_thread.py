@@ -55,6 +55,7 @@ class TestGpioThread(JNTTThreadRun, JNTTThreadRunCommon):
 
     def test_101_thread_start_wait_long_stop(self):
         #~ self.skipTest("Fail on docker")
+        self.onlyRasperryTest()
         self.thread.start()
         time.sleep(60)
         #~ self.assertDir("/tmp/janitoo_test/home/public")
