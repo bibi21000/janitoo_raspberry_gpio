@@ -28,6 +28,7 @@ import logging
 logger = logging.getLogger(__name__)
 import os, sys
 import time
+import datetime
 import threading
 
 from janitoo.thread import JNTBusThread, BaseThread
@@ -107,6 +108,7 @@ class GpioBus(JNTBus):
             self.gpio = GPIO.get_platform_gpio()
         except:
             logger.exception("Exception when starting GPIO bus")
+        self.export_attrs('gpio', self.gpio)
 
     def stop(self):
         """Stop the bus
@@ -247,6 +249,23 @@ class InputComponent(GpioComponent):
 class PirComponent(InputComponent):
     """ A PIR motion sensor """
 
+    def start(self, mqttc):
+        """Start the component.
+
+        """
+        InputComponent.start(self, mqttc)
+        configs = len(self.values["pin"].get_index_configs())
+        for config in range(configs):
+            try:
+                while self._bus.gpio.input(self.values["pin"].instances[config]['data'])==1:
+                    self.values["status"].instances[config]['data'] = 0
+            except:
+                logger.exception("Exception when starting PIR component")
+        return True
+
+class PirComponent(InputComponent):
+    """ A PIR motion sensor """
+
     def __init__(self, **kwargs):
         """
         """
@@ -260,14 +279,70 @@ class PirComponent(InputComponent):
         """Start the component.
 
         """
-        InputComponent.start(self, mqttc)
+        GpioComponent.start(self, mqttc)
         configs = len(self.values["pin"].get_index_configs())
-        for config in range(configs):
+        if configs == 0:
             try:
-                while self._bus.gpio.input(self.values["pin"].instances[config]['data'])==1:
-                    self.values["status"].instances[config]['data'] = 0
+                self.setup_pir( self._bus.gpio, \
+                                  self.values["pin"].data, \
+                                  GPIO.BOTH, \
+                                  self.callback_pir, \
+                                  self.values["bouncetime"].data)
             except:
                 logger.exception("Exception when starting PIR component")
+        else:
+            for config in range(configs):
+                print "config :", config
+                try:
+                    self.setup_pir( self._bus.gpio, \
+                                      self.values["pin"].instances[config]['data'], \
+                                      GPIO.BOTH, \
+                                      self.callback_pir, \
+                                      self.values["bouncetime"].instances[config]['data'])
+                except:
+                    logger.exception("Exception when starting PIR component")
+        return True
+
+    def setup_pir(self, gpio, pin, edge, callback, bouncetime ):
+        try:
+            logger.debug("[%s] - start PIR component on pin %s", self.__class__.__name__, pin)
+            gpio.setup(pin, GPIO.IN)
+            stop_at = datetime.datetime.now() + datetime.timedelta(seconds=5)
+            while gpio.input(pin) == GPIO.HIGH:
+                if datetime.datetime.now() > stop_at:
+                    logger.warning("[%s] - Timeout when starting PIR component", self.__class__.__name__)
+                    break
+                time.sleep(0.001)
+            gpio.add_event_detect(pin, edge, callback=callback, bouncetime=bouncetime)
+        except:
+            logger.exception("Exception when starting PIR component")
+
+    def callback_pir(self, channel):
+        """
+        """
+        if 0 not in self._inputs:
+            self._inputs[0] = {}
+        self._inputs[0]['value'] = None
+        logger.debug("[%s] - callback_pir : %s on channel %s", self.__class__.__name__, self._inputs[0]['value'], channel)
+
+    def stop(self):
+        """Stop the component.
+
+        """
+        self.stop_check()
+        configs = len(self.values["pin"].get_index_configs())
+        if configs == 0:
+            try:
+                self._bus.gpio.remove_event_detect(self.values["pin"].data)
+            except:
+                logger.exception("Exception when stopping PIR component")
+        else:
+            for config in range(configs):
+                try:
+                    self._bus.gpio.remove_event_detect(self.values["pin"].instances[config]['data'])
+                except:
+                    logger.exception("Exception when stopping PIR component")
+        GpioComponent.stop(self)
         return True
 
 class SonicComponent(InputComponent):
@@ -346,17 +421,6 @@ class SonicComponent(InputComponent):
                 except:
                     logger.exception("Exception when starting sonic component")
 
-    def trigger_sonic(self, gpio, pin_trig ):
-        try:
-            # Send 10us pulse to trigger
-            gpio.output(pin_trig, GPIO.HIGH)
-            time.sleep(0.00001)
-            gpio.output(pin_trig, GPIO.LOW)
-            self.echo_start = time.time()
-            logger.debug("[%s] - Send trigger", self.__class__.__name__)
-        except:
-            logger.exception("Exception when starting sonic component")
-
     def start(self, mqttc):
         """Start the component.
 
@@ -368,7 +432,7 @@ class SonicComponent(InputComponent):
                 self.setup_sonic( self._bus.gpio, \
                                   self.values["pin_trig"].data, \
                                   self.values["pin_echo"].data, \
-                                  GPIO.BOTH, \
+                                  GPIO.RISING, \
                                   self.callback_echo, \
                                   self.values["bouncetime"].data)
             except:
@@ -393,17 +457,20 @@ class SonicComponent(InputComponent):
             gpio.setup(pin_trig, GPIO.OUT)
             gpio.setup(pin_echo, GPIO.IN)
             gpio.output(pin_trig, GPIO.LOW)
+            stop_at = datetime.datetime.now() + datetime.timedelta(seconds=5)
+            logger.debug("[%s] - start sonic component on trigger pin %s and echo pin %s", self.__class__.__name__, pin_trig, pin_echo)
             while gpio.input(pin_echo) == GPIO.HIGH:
+                if datetime.datetime.now() > stop_at:
+                    logger.warning("[%s] - Timeout when starting sonic component", self.__class__.__name__)
+                    break
                 time.sleep(0.1)
             gpio.add_event_detect(pin_echo, edge, callback=callback, bouncetime=bouncetime)
-            logger.debug("[%s] - start sonic component on trigger pin %s and echo pin %s", self.__class__.__name__, pin_trig, pin_echo)
         except:
             logger.exception("Exception when starting sonic component")
 
     def callback_echo(self, channel):
         """
         """
-        print "callback received"
         if self.echo_start is None:
             return
         self.echo_stop = time.time()
@@ -414,17 +481,34 @@ class SonicComponent(InputComponent):
         self._inputs[0]['value'] = dist
         logger.debug("[%s] - callback_echo distance : %s cm on channel %s", self.__class__.__name__, dist, channel)
 
+    def trigger_sonic(self, gpio, pin_trig ):
+        try:
+            # Send 10us pulse to trigger
+            gpio.output(pin_trig, GPIO.HIGH)
+            time.sleep(0.00001)
+            gpio.output(pin_trig, GPIO.LOW)
+            self.echo_start = time.time()
+            logger.debug("[%s] - Send trigger", self.__class__.__name__)
+        except:
+            logger.exception("Exception when starting sonic component")
+
     def stop(self):
         """Stop the component.
 
         """
         self.stop_check()
         configs = len(self.values["pin_echo"].get_index_configs())
-        for config in range(configs):
+        if configs == 0:
             try:
-                self._bus.gpio.remove_event_detect(self.values["pin_echo"].instances[config]['data'])
+                self._bus.gpio.remove_event_detect(self.values["pin_echo"].data)
             except:
                 logger.exception("Exception when stopping sonic component")
+        else:
+            for config in range(configs):
+                try:
+                    self._bus.gpio.remove_event_detect(self.values["pin_echo"].instances[config]['data'])
+                except:
+                    logger.exception("Exception when stopping sonic component")
         GpioComponent.stop(self)
         return True
 
@@ -483,3 +567,12 @@ class OutputComponent(GpioComponent):
 
 class PwmComponent(GpioComponent):
     """ A resource ie /rrd """
+
+    def __init__(self, **kwargs):
+        """
+        """
+        self._inputs = {}
+        oid = kwargs.pop('oid', 'rpigpio.pwm')
+        product_name = kwargs.pop('product_name', "Output PWM")
+        name = kwargs.pop('name', "Output PWM")
+        GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)

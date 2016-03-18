@@ -44,50 +44,57 @@ from janitoo.utils import TOPIC_NODES, TOPIC_NODES_REPLY, TOPIC_NODES_REQUEST
 from janitoo.utils import TOPIC_BROADCAST_REPLY, TOPIC_BROADCAST_REQUEST
 from janitoo.utils import TOPIC_VALUES_USER, TOPIC_VALUES_CONFIG, TOPIC_VALUES_SYSTEM, TOPIC_VALUES_BASIC
 
-from janitoo_raspberry_gpio.thread_gpio import GpioThread
-import janitoo_raspberry_gpio.gpio
+#~ from janitoo_raspberry_gpio.thread_gpio import GpioThread
+#~ import janitoo_raspberry_gpio.gpio
 
-try:
-    import Adafruit_GPIO as GPIO
-except:
-    logger.exception('Can"t import GPIO')
-
-class TestGpioComponentInput(JNTTComponent, JNTTComponentCommon):
+class TestGpioInput(JNTTComponent, JNTTComponentCommon):
     """Test the component
     """
     component_name = "rpigpio.input"
 
-class TestGpioComponentOutput(JNTTComponent, JNTTComponentCommon):
+class TestGpioOutput(JNTTComponent, JNTTComponentCommon):
     """Test the component
     """
     component_name = "rpigpio.output"
 
-class TestGpioComponentPwm(JNTTComponent, JNTTComponentCommon):
+class TestGpioPwm(JNTTComponent, JNTTComponentCommon):
     """Test the component
     """
     component_name = "rpigpio.pwm"
 
-class TestGpioComponentiPir(JNTTComponent, JNTTComponentCommon):
+class TestGpioPir(JNTTComponent, JNTTComponentCommon):
     """Test the component
     """
     component_name = "rpigpio.pir"
 
-class TestGpioComponentSonic(JNTTComponent, JNTTComponentCommon):
+    def test_101_detect(self):
+        self.onlyRasperryTest()
+        import Adafruit_GPIO as GPIO
+        comp = self.factory[self.component_name]()
+        gpio = GPIO.get_platform_gpio()
+        comp.setup_pir(gpio, 21, GPIO.RISING, comp.callback_pir, 200)
+        time.sleep(5)
+        dist = comp.values['status'].data
+        print "status", dist
+        self.assertNotEqual(dist, None)
+        self.assertTrue(comp.check_heartbeat())
+        gpio.cleanup()
+
+class TestGpioSonic(JNTTComponent, JNTTComponentCommon):
     """Test the component
     """
     component_name = "rpigpio.sonic"
 
-    def test_101_read_distance(self):
+    def test_102_read_distance(self):
         self.onlyRasperryTest()
+        import Adafruit_GPIO as GPIO
         comp = self.factory[self.component_name]()
         gpio = GPIO.get_platform_gpio()
         comp.setup_sonic(gpio, 20, 21, GPIO.RISING, comp.callback_echo, 200)
-        #~ comp.trigger_sonic(gpio, 20)
+        comp.trigger_sonic(gpio, 20)
         time.sleep(1)
         dist = comp.values['status'].data
         print "distance", dist
         self.assertNotEqual(dist, None)
         self.assertTrue(comp.check_heartbeat())
         gpio.cleanup()
-
-
