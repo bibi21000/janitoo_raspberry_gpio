@@ -96,19 +96,18 @@ class GpioBus(JNTBus):
 
         """
         #~ print "it's me %s : %s" % (self.values['upsname'].data, self._ups_stats_last)
-        if self.gpio.RPI_INFO['P1_REVISION']>0:
-            return True
-        return False
+        return self.gpio is not None
 
     def start(self, mqttc, trigger_thread_reload_cb=None):
         """Start the bus
         """
+        self.export_attrs('gpio', self.gpio)
         JNTBus.start(self, mqttc, trigger_thread_reload_cb)
         try:
             self.gpio = GPIO.get_platform_gpio()
         except:
             logger.exception("Exception when starting GPIO bus")
-        self.export_attrs('gpio', self.gpio)
+        self.update_attrs('gpio', self.gpio)
 
     def stop(self):
         """Stop the bus
@@ -118,6 +117,7 @@ class GpioBus(JNTBus):
         except:
             logger.exception("Exception when stopping GPIO bus")
         self.gpio = None
+        self.update_attrs('gpio', self.gpio)
         JNTBus.stop(self)
 
 class GpioComponent(JNTComponent):
