@@ -48,11 +48,11 @@ except:
 #Must be implemented for non-regression
 from janitoo.classes import COMMAND_DESC
 
-COMMAND_WEB_CONTROLLER = 0x1030
+COMMAND_SWITCH_BINARY = 0x0025
 COMMAND_WEB_RESOURCE = 0x1031
 COMMAND_DOC_RESOURCE = 0x1032
 
-assert(COMMAND_DESC[COMMAND_WEB_CONTROLLER] == 'COMMAND_WEB_CONTROLLER')
+assert(COMMAND_DESC[COMMAND_SWITCH_BINARY] == 'COMMAND_SWITCH_BINARY')
 assert(COMMAND_DESC[COMMAND_WEB_RESOURCE] == 'COMMAND_WEB_RESOURCE')
 assert(COMMAND_DESC[COMMAND_DOC_RESOURCE] == 'COMMAND_DOC_RESOURCE')
 ##############################################################
@@ -329,7 +329,6 @@ class PirComponent(InputComponent):
         """Stop the component.
 
         """
-        self.stop_check()
         configs = len(self.values["pin"].get_index_configs())
         if configs == 0:
             try:
@@ -524,10 +523,10 @@ class OutputComponent(GpioComponent):
         name = kwargs.pop('name', "Output GPIO")
         GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
         uuid="state"
-        self.values[uuid] = self.value_factory['action_boolean'](options=self.options, uuid=uuid,
+        self.values[uuid] = self.value_factory['action_switch_binary'](
+            options=self.options,
+            uuid=uuid,
             node_uuid=self.uuid,
-            help='The state of the GPIO',
-            label='State',
             set_data_cb=self.set_state,
         )
         poll_value = self.values[uuid].create_poll_value(default=60)
