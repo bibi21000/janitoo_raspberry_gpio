@@ -581,7 +581,6 @@ class PwmComponent(GpioComponent):
             list_items=['on', 'off'],
             default='off',
             set_data_cb=self.set_switch,
-            cmd_class=COMMAND_SWITCH_BINARY,
             genre=0x01,
         )
         poll_value = self.values[uuid].create_poll_value(default=300)
