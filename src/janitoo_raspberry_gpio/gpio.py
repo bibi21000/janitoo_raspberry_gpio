@@ -249,23 +249,6 @@ class InputComponent(GpioComponent):
 class PirComponent(InputComponent):
     """ A PIR motion sensor """
 
-    def start(self, mqttc):
-        """Start the component.
-
-        """
-        InputComponent.start(self, mqttc)
-        configs = len(self.values["pin"].get_index_configs())
-        for config in range(configs):
-            try:
-                while self._bus.gpio.input(self.values["pin"].instances[config]['data'])==1:
-                    self.values["status"].instances[config]['data'] = 0
-            except:
-                logger.exception("Exception when starting PIR component")
-        return True
-
-class PirComponent(InputComponent):
-    """ A PIR motion sensor """
-
     def __init__(self, **kwargs):
         """
         """
@@ -512,7 +495,7 @@ class SonicComponent(InputComponent):
         return True
 
 class OutputComponent(GpioComponent):
-    """ A resource ie /rrd """
+    """ A resource"""
 
     def __init__(self, **kwargs):
         """
@@ -522,7 +505,7 @@ class OutputComponent(GpioComponent):
         product_name = kwargs.pop('product_name', "Output GPIO")
         name = kwargs.pop('name', "Output GPIO")
         GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
-        uuid="state"
+        uuid="switch"
         self.values[uuid] = self.value_factory['action_switch_binary'](
             options=self.options,
             uuid=uuid,
@@ -575,3 +558,41 @@ class PwmComponent(GpioComponent):
         product_name = kwargs.pop('product_name', "Output PWM")
         name = kwargs.pop('name', "Output PWM")
         GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
+        uuid="level"
+        self.values[uuid] = self.value_factory['action_switch_multilevel'](options=self.options, uuid=uuid,
+            node_uuid=self.uuid,
+            help='The level of the LED. A byte from 0 to 100',
+            label='Level',
+            default=0,
+            set_data_cb=self.set_level,
+        )
+        poll_value = self.values[uuid].create_poll_value(default=300)
+        self.values[poll_value.uuid] = poll_value
+        uuid="max_level"
+        self.values[uuid] = self.value_factory['config_byte'](options=self.options, uuid=uuid,
+            node_uuid=self.uuid,
+            help="The max level supported by the LED. Some LED doesn't seems support 100% PWM. A byte from 0 to 100",
+            label='Max level',
+            default=100,
+        )
+        uuid="switch"
+        self.values[uuid] = self.value_factory['action_switch_binary'](options=self.options, uuid=uuid,
+            node_uuid=self.uuid,
+            list_items=['on', 'off'],
+            default='off',
+            set_data_cb=self.set_switch,
+            cmd_class=COMMAND_SWITCH_BINARY,
+            genre=0x01,
+        )
+        poll_value = self.values[uuid].create_poll_value(default=300)
+        self.values[poll_value.uuid] = poll_value
+
+    def set_level(self, node_uuid, index, data):
+        """Set the level ot the LED
+        """
+        logger.warning("[%s] - set_level unknown data : %s", self.__class__.__name__, data)
+
+    def set_switch(self, node_uuid, index, data):
+        """Switch On/Off the led
+        """
+        logger.warning("[%s] - set_switch unknown data : %s", self.__class__.__name__, data)
