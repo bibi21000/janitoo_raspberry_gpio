@@ -540,7 +540,7 @@ class OutputComponent(GpioComponent):
         """
         if index in self._inputs:
             try:
-                if data == True or data == 1:
+                if data == True or data == 1 or data.lower() == 'on':
                     self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.HIGH)
                 else:
                     self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.LOW)
