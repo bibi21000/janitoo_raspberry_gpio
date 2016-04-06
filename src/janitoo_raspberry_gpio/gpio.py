@@ -112,13 +112,13 @@ class GpioBus(JNTBus):
     def stop(self):
         """Stop the bus
         """
+        JNTBus.stop(self)
         try:
             self.gpio.cleanup()
         except:
             logger.exception("Exception when stopping GPIO bus")
         self.gpio = None
         self.update_attrs('gpio', self.gpio)
-        JNTBus.stop(self)
 
 class GpioComponent(JNTComponent):
     """ A generic component for gpio """
