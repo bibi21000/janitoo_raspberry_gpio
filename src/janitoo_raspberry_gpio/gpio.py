@@ -313,6 +313,7 @@ class PirComponent(InputComponent):
 
         """
         configs = len(self.values["pin"].get_index_configs())
+        logger.waring("Stop PIR : configs = %s", configs)
         if configs == 0:
             try:
                 self._bus.gpio.remove_event_detect(self.values["pin"].data)
@@ -448,7 +449,7 @@ class SonicComponent(InputComponent):
                 time.sleep(0.1)
             gpio.add_event_detect(pin_echo, edge, callback=callback, bouncetime=bouncetime)
         except:
-            logger.exception("Exception when starting sonic component")
+            logger.exception("Exception when setup_sonic component")
 
     def callback_echo(self, channel):
         """
@@ -472,7 +473,7 @@ class SonicComponent(InputComponent):
             self.echo_start = time.time()
             logger.debug("[%s] - Send trigger", self.__class__.__name__)
         except:
-            logger.exception("Exception when starting sonic component")
+            logger.exception("Exception when trigger_sonic component")
 
     def stop(self):
         """Stop the component.
@@ -480,6 +481,7 @@ class SonicComponent(InputComponent):
         """
         self.stop_check()
         configs = len(self.values["pin_echo"].get_index_configs())
+        logger.waring("Stop SONIC : configs = %s", configs)
         if configs == 0:
             try:
                 self._bus.gpio.remove_event_detect(self.values["pin_echo"].data)
