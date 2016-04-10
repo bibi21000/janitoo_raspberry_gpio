@@ -311,7 +311,7 @@ class PirComponent(InputComponent):
         """Stop the component.
 
         """
-        if self._bus.gpio is None;
+        if self._bus.gpio is None:
             return False
         configs = len(self.values["pin"].get_index_configs())
         logger.warning("Stop PIR : configs = %s", configs)
@@ -481,7 +481,7 @@ class SonicComponent(InputComponent):
 
         """
         self.stop_check()
-        if self._bus.gpio is None;
+        if self._bus.gpio is None:
             return False
         configs = len(self.values["pin_echo"].get_index_configs())
         logger.warning("Stop SONIC : configs = %s", configs)
