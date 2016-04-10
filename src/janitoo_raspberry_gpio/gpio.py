@@ -313,7 +313,7 @@ class PirComponent(InputComponent):
 
         """
         configs = len(self.values["pin"].get_index_configs())
-        logger.waring("Stop PIR : configs = %s", configs)
+        logger.warning("Stop PIR : configs = %s", configs)
         if configs == 0:
             try:
                 self._bus.gpio.remove_event_detect(self.values["pin"].data)
@@ -481,7 +481,7 @@ class SonicComponent(InputComponent):
         """
         self.stop_check()
         configs = len(self.values["pin_echo"].get_index_configs())
-        logger.waring("Stop SONIC : configs = %s", configs)
+        logger.warning("Stop SONIC : configs = %s", configs)
         if configs == 0:
             try:
                 self._bus.gpio.remove_event_detect(self.values["pin_echo"].data)
