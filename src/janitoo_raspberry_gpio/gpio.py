@@ -641,7 +641,7 @@ class ServoComponent(GpioComponent):
         """
         logger.warning("[%s] - set_pulse unknown data : %s", self.__class__.__name__, data)
 
-    def set_switch(self, node_uuid, index, data):
+    def set_angle(self, node_uuid, index, data):
         """Set the angle
         """
         logger.warning("[%s] - set_angle unknown data : %s", self.__class__.__name__, data)
