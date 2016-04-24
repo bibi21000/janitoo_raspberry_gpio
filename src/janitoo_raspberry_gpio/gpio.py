@@ -72,6 +72,9 @@ def make_pir(**kwargs):
 def make_sonic(**kwargs):
     return SonicComponent(**kwargs)
 
+def make_servo(**kwargs):
+    return ServoComponent(**kwargs)
+
 class GpioBus(JNTBus):
     """A bus to manage GPIO
     """
@@ -500,7 +503,7 @@ class SonicComponent(InputComponent):
         return True
 
 class OutputComponent(GpioComponent):
-    """ A resource"""
+    """ An output component"""
 
     def __init__(self, **kwargs):
         """
@@ -553,7 +556,7 @@ class OutputComponent(GpioComponent):
                 logger.exception("[%s] - Exception when updating GPIO component", self.__class__.__name__)
 
 class PwmComponent(GpioComponent):
-    """ A resource ie /rrd """
+    """ A PWM component """
 
     def __init__(self, **kwargs):
         """
@@ -600,3 +603,45 @@ class PwmComponent(GpioComponent):
         """Switch On/Off the led
         """
         logger.warning("[%s] - set_switch unknown data : %s", self.__class__.__name__, data)
+
+class ServoComponent(GpioComponent):
+    """ A servo component for GPIO """
+
+    def __init__(self, **kwargs):
+        """
+        """
+        self._inputs = {}
+        oid = kwargs.pop('oid', 'rpigpio.servo')
+        product_name = kwargs.pop('product_name', "Servo")
+        name = kwargs.pop('name', "Servo")
+        GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
+        uuid="angle"
+        self.values[uuid] = self.value_factory['action_switch_multilevel'](options=self.options, uuid=uuid,
+            node_uuid=self.uuid,
+            help='The angle',
+            label='angle',
+            default=0,
+            set_data_cb=self.set_angle,
+        )
+        poll_value = self.values[uuid].create_poll_value(default=300)
+        self.values[poll_value.uuid] = poll_value
+        uuid="pulse"
+        self.values[uuid] = self.value_factory['action_switch_multilevel'](options=self.options, uuid=uuid,
+            node_uuid=self.uuid,
+            help='The pulse',
+            label='pulse',
+            default=0,
+            set_data_cb=self.set_pulse,
+        )
+        poll_value = self.values[uuid].create_poll_value(default=300)
+        self.values[poll_value.uuid] = poll_value
+
+    def set_pulse(self, node_uuid, index, data):
+        """Set the pulse
+        """
+        logger.warning("[%s] - set_pulse unknown data : %s", self.__class__.__name__, data)
+
+    def set_switch(self, node_uuid, index, data):
+        """Set the angle
+        """
+        logger.warning("[%s] - set_angle unknown data : %s", self.__class__.__name__, data)
