@@ -66,6 +66,9 @@ def make_output(**kwargs):
 def make_pwm(**kwargs):
     return PwmComponent(**kwargs)
 
+def make_rgb(**kwargs):
+    return RGBComponent(**kwargs)
+
 def make_pir(**kwargs):
     return PirComponent(**kwargs)
 
@@ -645,3 +648,70 @@ class ServoComponent(GpioComponent):
         """Set the angle
         """
         logger.warning("[%s] - set_angle unknown data : %s", self.__class__.__name__, data)
+
+class RGBComponent(GpioComponent):
+    """ A PWM RGB component for GPIO """
+
+    def __init__(self, **kwargs):
+        """
+        """
+        self._inputs = {}
+        oid = kwargs.pop('oid', 'rpigpio.rgb')
+        product_name = kwargs.pop('product_name', "RGB PWM")
+        name = kwargs.pop('name', "RGB PWM")
+        GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
+        del self.values['pin']
+        JNTComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
+        logger.debug("[%s] - __init__ node uuid:%s", self.__class__.__name__, self.uuid)
+
+        uuid="pinr"
+        self.values[uuid] = self.value_factory['config_integer'](options=self.options, uuid=uuid,
+            node_uuid=self.uuid,
+            help='The pin number on the board for Red',
+            label='PinR',
+            default=kwargs.pop('pinr', 1),
+        )
+        uuid="ping"
+        self.values[uuid] = self.value_factory['config_integer'](options=self.options, uuid=uuid,
+            node_uuid=self.uuid,
+            help='The pin number on the board for Green',
+            label='PinG',
+            default=kwargs.pop('ping', 1),
+        )
+        uuid="pinb"
+        self.values[uuid] = self.value_factory['config_integer'](options=self.options, uuid=uuid,
+            node_uuid=self.uuid,
+            help='The pin number on the board for Blue',
+            label='PinB',
+            default=kwargs.pop('pinb', 1),
+        )
+        uuid="color"
+        self.values[uuid] = self.value_factory['action_switch_multilevel'](options=self.options, uuid=uuid,
+            node_uuid=self.uuid,
+            help='The color',
+            label='color',
+            default='00#00#00',
+            set_data_cb=self.set_color,
+        )
+        poll_value = self.values[uuid].create_poll_value(default=300)
+        self.values[poll_value.uuid] = poll_value
+        uuid="switch"
+        self.values[uuid] = self.value_factory['action_switch_binary'](options=self.options, uuid=uuid,
+            node_uuid=self.uuid,
+            list_items=['on', 'off'],
+            default='off',
+            set_data_cb=self.set_switch,
+            genre=0x01,
+        )
+        poll_value = self.values[uuid].create_poll_value(default=300)
+        self.values[poll_value.uuid] = poll_value
+
+    def set_switch(self, node_uuid, index, data):
+        """Switch On/Off the led
+        """
+        logger.warning("[%s] - set_switch unknown data : %s", self.__class__.__name__, data)
+
+    def set_color(self, node_uuid, index, data):
+        """Set the color
+        """
+        logger.warning("[%s] - set_color unknown data : %s", self.__class__.__name__, data)

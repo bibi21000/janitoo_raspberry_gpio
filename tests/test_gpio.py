@@ -62,6 +62,11 @@ class TestGpioPwm(JNTTComponent, JNTTComponentCommon):
     """
     component_name = "rpigpio.pwm"
 
+class TestGpioRGB(JNTTComponent, JNTTComponentCommon):
+    """Test the component
+    """
+    component_name = "rpigpio.rgb"
+
 class TestGpioServo(JNTTComponent, JNTTComponentCommon):
     """Test the component
     """
