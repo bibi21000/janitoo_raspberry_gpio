@@ -96,6 +96,7 @@ class GpioBus(JNTBus):
             default='BOARD',
             list_items=['BCM', 'BOARD'],
         )
+        self.export_attrs('gpio', self.gpio)
 
     def check_heartbeat(self):
         """Check that the component is 'available'
@@ -106,7 +107,6 @@ class GpioBus(JNTBus):
     def start(self, mqttc, trigger_thread_reload_cb=None):
         """Start the bus
         """
-        self.export_attrs('gpio', self.gpio)
         JNTBus.start(self, mqttc, trigger_thread_reload_cb)
         try:
             self.gpio = GPIO.get_platform_gpio()
