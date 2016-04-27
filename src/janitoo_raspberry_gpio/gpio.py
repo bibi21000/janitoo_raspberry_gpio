@@ -386,6 +386,8 @@ class SonicComponent(InputComponent):
 
         """
         self.stop_check()
+        if self._bus is None or self._bus.gpio is None:
+            return
         if self.check_timer is None:
             self.check_timer = threading.Timer(self.values['timer_delay'].data, self.on_check)
             self.check_timer.start()
