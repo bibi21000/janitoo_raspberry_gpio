@@ -123,7 +123,7 @@ class GpioBus(JNTBus):
         except:
             logger.exception("[%s] - Exception when stopping GPIO bus", self.__class__.__name__)
         self.gpio = None
-        self.clean_attrs('gpio')
+        self.update_attrs('gpio', self.gpio)
 
 class GpioComponent(JNTComponent):
     """ A generic component for gpio """
