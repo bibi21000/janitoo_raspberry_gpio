@@ -225,6 +225,7 @@ class InputComponent(GpioComponent):
                     pull_up_down = GPIO.PUD_UP
                 else :
                     pull_up_down = None
+                logger.debug("[%s] - start GPIO Input component on pin %s", self.__class__.__name__, self.values["pin"].instances[config]['data'])
                 self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.IN, pull_up_down=pull_up_down)
                 sedge = self.values['edge'].instances[config]['data']
                 if sedge == "RISING":
@@ -245,6 +246,7 @@ class InputComponent(GpioComponent):
         configs = len(self.values["pin"].get_index_configs())
         for config in range(configs):
             try:
+                logger.debug("[%s] - stop GPIO Input component on pin %s", self.__class__.__name__, self.values["pin"].instances[config]['data'])
                 GPIO.remove_event_detect(self.values["pin"].instances[config]['data'])
             except:
                 logger.exception("[%s] - Exception when stopping GPIO component", self.__class__.__name__)
@@ -320,7 +322,7 @@ class PirComponent(InputComponent):
         if self._bus.gpio is None:
             return False
         configs = len(self.values["pin"].get_index_configs())
-        logger.warning("Stop PIR : configs = %s", configs)
+        logger.warning("[%s] - Stop PIR : configs = %s", self.__class__.__name__, configs)
         if configs == 0:
             try:
                 self._bus.gpio.remove_event_detect(self.values["pin"].data)
@@ -492,7 +494,7 @@ class SonicComponent(InputComponent):
         if self._bus.gpio is None:
             return False
         configs = len(self.values["pin_echo"].get_index_configs())
-        logger.warning("Stop SONIC : configs = %s", configs)
+        logger.warning("[%s] - Stop SONIC : configs = %s", self.__class__.__name__, configs)
         if configs == 0:
             try:
                 self._bus.gpio.remove_event_detect(self.values["pin_echo"].data)
@@ -536,6 +538,7 @@ class OutputComponent(GpioComponent):
         configs = len(self.values["pin"].get_index_configs())
         for config in range(configs):
             try:
+                logger.debug("[%s] - start GPIO Output component on pin %s", self.__class__.__name__, self.values["pin"].instances[config]['data'])
                 self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.OUT)
             except:
                 logger.exception("[%s] - Exception when starting GPIO component", self.__class__.__name__)
@@ -545,6 +548,14 @@ class OutputComponent(GpioComponent):
         """Stop the component.
 
         """
+        logger.debug("[%s] - stop GPIO Output component", self.__class__.__name__)
+        configs = len(self.values["pin"].get_index_configs())
+        for config in range(configs):
+            try:
+                logger.debug("[%s] - stop GPIO Output component on pin %s", self.__class__.__name__, self.values["pin"].instances[config]['data'])
+                self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.OUT)
+            except:
+                logger.exception("[%s] - Exception when stopping GPIO component", self.__class__.__name__)
         GpioComponent.stop(self)
         return True
 
@@ -707,6 +718,35 @@ class RGBComponent(GpioComponent):
         )
         poll_value = self.values[uuid].create_poll_value(default=300)
         self.values[poll_value.uuid] = poll_value
+
+    def start(self, mqttc):
+        """Start the component.
+
+        """
+        GpioComponent.start(self, mqttc)
+        #~ configs = len(self.values["pin"].get_index_configs())
+        #~ for config in range(configs):
+            #~ try:
+                #~ logger.debug("[%s] - start GPIO Output component on pin %s", self.__class__.__name__, self.values["pin"].instances[config]['data'])
+                #~ self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.OUT)
+            #~ except:
+                #~ logger.exception("[%s] - Exception when starting GPIO component", self.__class__.__name__)
+        return True
+
+    def stop(self):
+        """Stop the component.
+
+        """
+        logger.debug("[%s] - stop GPIO Output component", self.__class__.__name__)
+        #~ configs = len(self.values["pin"].get_index_configs())
+        #~ for config in range(configs):
+            #~ try:
+                #~ logger.debug("[%s] - stop GPIO Output component on pin %s", self.__class__.__name__, self.values["pin"].instances[config]['data'])
+                #~ self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.OUT)
+            #~ except:
+                #~ logger.exception("[%s] - Exception when stopping GPIO component", self.__class__.__name__)
+        GpioComponent.stop(self)
+        return True
 
     def set_switch(self, node_uuid, index, data):
         """Switch On/Off the led
