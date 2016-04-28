@@ -179,7 +179,7 @@ class InputComponent(GpioComponent):
             node_uuid=self.uuid,
             help='Bouncetime should be specified in milliseconds',
             label='bouncetime',
-            default=kwargs.pop('bouncetime', 200),
+            default=kwargs.pop('bouncetime', 300),
         )
         uuid="trigger"
         self.values[uuid] = self.value_factory['config_boolean'](options=self.options, uuid=uuid,
