@@ -783,9 +783,25 @@ class LedComponent(GpioComponent):
         poll_value = self.values[uuid].create_poll_value(default=300)
         self.values[poll_value.uuid] = poll_value
 
+        uuid="blink"
+        self.values[uuid] = self.value_factory['blink'](options=self.options, uuid=uuid,
+            node_uuid=self.uuid,
+            blink_off_cb=self.blink_off_cb,
+            blink_on_cb=self.blink_on_cb,
+        )
+        poll_value = self.values[uuid].create_poll_value(default=300)
+        self.values[poll_value.uuid] = poll_value
+
+    def blink_off_cb(self, node_uuid=None, index=None):
+        """Callback for blink"""
+        pass
+
+    def blink_on_cb(self, node_uuid=None, index=None):
+        """Callback for blink"""
+        pass
+
     def start(self, mqttc):
         """Start the component.
-
         """
         GpioComponent.start(self, mqttc)
         configs = len(self.values["pin"].get_index_configs())
