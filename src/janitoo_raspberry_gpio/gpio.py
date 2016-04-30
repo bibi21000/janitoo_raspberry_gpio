@@ -69,6 +69,9 @@ def make_pwm(**kwargs):
 def make_rgb(**kwargs):
     return RGBComponent(**kwargs)
 
+def make_led(**kwargs):
+    return LedComponent(**kwargs)
+
 def make_pir(**kwargs):
     return PirComponent(**kwargs)
 
@@ -673,9 +676,8 @@ class RGBComponent(GpioComponent):
         product_name = kwargs.pop('product_name', "RGB PWM")
         name = kwargs.pop('name', "RGB PWM")
         GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
-        del self.values['pin']
-        JNTComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
         logger.debug("[%s] - __init__ node uuid:%s", self.__class__.__name__, self.uuid)
+        del self.values['pin']
 
         uuid="pinr"
         self.values[uuid] = self.value_factory['config_integer'](options=self.options, uuid=uuid,
@@ -757,3 +759,61 @@ class RGBComponent(GpioComponent):
         """Set the color
         """
         logger.warning("[%s] - set_color unknown data : %s", self.__class__.__name__, data)
+
+class LedComponent(GpioComponent):
+    """ A simple LED component for GPIO """
+
+    def __init__(self, **kwargs):
+        """
+        """
+        self._inputs = {}
+        oid = kwargs.pop('oid', 'rpigpio.rgb')
+        product_name = kwargs.pop('product_name', "RGB PWM")
+        name = kwargs.pop('name', "RGB PWM")
+        GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
+
+        uuid="switch"
+        self.values[uuid] = self.value_factory['action_switch_binary'](options=self.options, uuid=uuid,
+            node_uuid=self.uuid,
+            list_items=['on', 'off'],
+            default='off',
+            set_data_cb=self.set_switch,
+            genre=0x01,
+        )
+        poll_value = self.values[uuid].create_poll_value(default=300)
+        self.values[poll_value.uuid] = poll_value
+
+    def start(self, mqttc):
+        """Start the component.
+
+        """
+        GpioComponent.start(self, mqttc)
+        configs = len(self.values["pin"].get_index_configs())
+        for config in range(configs):
+            try:
+                logger.debug("[%s] - start GPIO Output component on pin %s", self.__class__.__name__, self.values["pin"].instances[config]['data'])
+                self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.OUT)
+            except:
+                logger.exception("[%s] - Exception when starting GPIO component", self.__class__.__name__)
+        return True
+
+    def stop(self):
+        """Stop the component.
+
+        """
+        logger.debug("[%s] - stop GPIO Output component", self.__class__.__name__)
+        configs = len(self.values["pin"].get_index_configs())
+        for config in range(configs):
+            try:
+                logger.debug("[%s] - stop GPIO Output component on pin %s", self.__class__.__name__, self.values["pin"].instances[config]['data'])
+                self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.OUT)
+            except:
+                logger.exception("[%s] - Exception when stopping GPIO component", self.__class__.__name__)
+        GpioComponent.stop(self)
+        return True
+
+    def set_switch(self, node_uuid, index, data):
+        """Switch On/Off the led
+        """
+        logger.warning("[%s] - set_switch unknown data : %s", self.__class__.__name__, data)
+
