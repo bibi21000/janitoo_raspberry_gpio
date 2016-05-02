@@ -138,8 +138,7 @@ class GpioComponent(JNTComponent):
         name = kwargs.pop('name', "Input")
         product_name = kwargs.pop('product_name', "GPIO")
         product_type = kwargs.pop('product_type', "Software")
-        product_manufacturer = kwargs.pop('product_manufacturer', "Janitoo")
-        JNTComponent.__init__(self, oid=oid, name=name, product_name=product_name, product_type=product_type, product_manufacturer=product_manufacturer, **kwargs)
+        JNTComponent.__init__(self, oid=oid, name=name, product_name=product_name, product_type=product_type, **kwargs)
         logger.debug("[%s] - __init__ node uuid:%s", self.__class__.__name__, self.uuid)
 
         uuid="pin"
