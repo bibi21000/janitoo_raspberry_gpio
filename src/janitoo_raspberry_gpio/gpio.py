@@ -93,7 +93,7 @@ class GpioBus(JNTBus):
         JNTBus.__init__(self, **kwargs)
         self._lock =  threading.Lock()
         self.gpio = None
-        uuid="boardmode%s"%OID
+        uuid="%s_boardmode"%OID
         self.values[uuid] = self.value_factory['config_list'](options=self.options, uuid=uuid,
             node_uuid=self.uuid,
             help='The board mode to use',
