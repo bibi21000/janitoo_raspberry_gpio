@@ -49,8 +49,8 @@ assert(COMMAND_DESC[COMMAND_CONTROLLER] == 'COMMAND_CONTROLLER')
 
 OID = 'rpigpio'
 
-def make_thread(options):
-    if get_option_autostart(options, OID) == True:
+def make_thread(options, force=False):
+    if get_option_autostart(options, OID) == True or force:
         return GpioThread(options)
     else:
         return None
