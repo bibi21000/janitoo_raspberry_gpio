@@ -38,6 +38,8 @@ from janitoo.node import JNTNode
 from janitoo.value import JNTValue
 from janitoo.component import JNTComponent
 from janitoo.bus import JNTBus
+from janitoo_raspberry_gpio.thread_gpio import OID
+
 try:
     import Adafruit_GPIO as GPIO
 except:
@@ -91,7 +93,7 @@ class GpioBus(JNTBus):
         JNTBus.__init__(self, **kwargs)
         self._lock =  threading.Lock()
         self.gpio = None
-        uuid="boardmode"
+        uuid="boardmode%s"%OID
         self.values[uuid] = self.value_factory['config_list'](options=self.options, uuid=uuid,
             node_uuid=self.uuid,
             help='The board mode to use',
