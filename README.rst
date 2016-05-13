@@ -16,3 +16,7 @@ This file will be published on your github account
 A section
 =========
 A text in this section.
+
+Documentation
+=============
+You can browse online documentation here : https://bibi21000.github.io/janitoo_raspberry_gpio/.
