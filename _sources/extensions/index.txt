@@ -1,0 +1,24 @@
+janitoo_raspberry_gpio package
+==============================
+
+Show janitoo's extensions.
+
+Core extensions
+---------------
+
+Threads
+^^^^^^^
+
+ - rpigpio (janitoo_raspberry_gpio.thread_gpio:make_thread)
+
+Components
+^^^^^^^^^^
+
+ - rpigpio.input (janitoo_raspberry_gpio.gpio:make_input)
+ - rpigpio.sonic (janitoo_raspberry_gpio.gpio:make_sonic)
+ - rpigpio.rgb (janitoo_raspberry_gpio.gpio:make_rgb)
+ - rpigpio.servo (janitoo_raspberry_gpio.gpio:make_servo)
+ - rpigpio.output (janitoo_raspberry_gpio.gpio:make_output)
+ - rpigpio.pir (janitoo_raspberry_gpio.gpio:make_pir)
+ - rpigpio.pwm (janitoo_raspberry_gpio.gpio:make_pwm)
+
