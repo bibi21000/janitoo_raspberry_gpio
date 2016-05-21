@@ -12,6 +12,10 @@ Developpers Tools
   :target: https://coveralls.io/github/bibi21000/janitoo_raspberry_gpio?branch=master
   :alt: Coveralls results
 
+.. image:: https://landscape.io/github/bibi21000/janitoo_raspberry_gpio/master/landscape.svg?style=flat
+   :target: https://landscape.io/github/bibi21000/janitoo_raspberry_gpio/master
+   :alt: Code Health
+
 |
 
 - `Nosetests report <nosetests/index.html>`_
