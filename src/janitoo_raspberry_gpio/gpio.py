@@ -26,19 +26,14 @@ __copyright__ = "Copyright © 2013-2014-2015-2016 Sébastien GALLET aka bibi2100
 
 import logging
 logger = logging.getLogger(__name__)
-import os, sys
+import os
 import time
 import datetime
 import threading
 
-from janitoo.thread import JNTBusThread, BaseThread
-from janitoo.options import get_option_autostart
-from janitoo.utils import HADD
-from janitoo.node import JNTNode
-from janitoo.value import JNTValue
+from janitoo.thread import JNTBusThread
 from janitoo.component import JNTComponent
 from janitoo.bus import JNTBus
-from janitoo_raspberry_gpio.thread_gpio import OID
 
 try:
     import Adafruit_GPIO as GPIO
@@ -58,6 +53,8 @@ assert(COMMAND_DESC[COMMAND_SWITCH_BINARY] == 'COMMAND_SWITCH_BINARY')
 assert(COMMAND_DESC[COMMAND_WEB_RESOURCE] == 'COMMAND_WEB_RESOURCE')
 assert(COMMAND_DESC[COMMAND_DOC_RESOURCE] == 'COMMAND_DOC_RESOURCE')
 ##############################################################
+
+OID = 'rpigpio'
 
 def make_input(**kwargs):
     return InputComponent(**kwargs)
@@ -212,6 +209,7 @@ class InputComponent(GpioComponent):
     def trigger_status(self, channel):
         """
         """
+        index = channel #BUG TODO
         self._inputs[index]['value'] = self._bus.gpio.input(self.values["pin"].instances[config]['data'])
         self.node.publish_poll(None, self.values['status'])
 
@@ -568,10 +566,10 @@ class OutputComponent(GpioComponent):
         """
         if index in self._inputs:
             try:
-                if data == True or data == 1 or data.lower() == 'on':
-                    self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.HIGH)
+                if data or data == 1 or data.lower() == 'on':
+                    self._bus.gpio.setup(self.values["pin"].instances[index]['data'], GPIO.HIGH)
                 else:
-                    self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.LOW)
+                    self._bus.gpio.setup(self.values["pin"].instances[index]['data'], GPIO.LOW)
             except:
                 logger.exception("[%s] - Exception when updating GPIO component", self.__class__.__name__)
 
