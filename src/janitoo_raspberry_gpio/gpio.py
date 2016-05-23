@@ -37,7 +37,7 @@ from janitoo.bus import JNTBus
 
 try:
     import Adafruit_GPIO as GPIO
-except:
+except Exception:
     logger.exception('Can"t import GPIO')
 
 ##############################################################
@@ -112,7 +112,7 @@ class GpioBus(JNTBus):
         JNTBus.start(self, mqttc, trigger_thread_reload_cb)
         try:
             self.gpio = GPIO.get_platform_gpio()
-        except:
+        except Exception:
             logger.exception("[%s] - Exception when starting GPIO bus", self.__class__.__name__)
         self.update_attrs('gpio', self.gpio)
 
@@ -122,7 +122,7 @@ class GpioBus(JNTBus):
         JNTBus.stop(self)
         try:
             self.gpio.cleanup()
-        except:
+        except Exception:
             logger.exception("[%s] - Exception when stopping GPIO bus", self.__class__.__name__)
         self.gpio = None
         self.update_attrs('gpio', self.gpio)
@@ -237,7 +237,7 @@ class InputComponent(GpioComponent):
                 else:
                     edge = GPIO.BOTH
                 self._bus.gpio.add_event_detect(self.values["pin"].instances[config]['data'], edge, callback=self.trigger_status, bouncetime=self.values["bouncetime"].instances[config]['data'])
-            except:
+            except Exception:
                 logger.exception("[%s] - Exception when starting GPIO component", self.__class__.__name__)
         return True
 
@@ -250,7 +250,7 @@ class InputComponent(GpioComponent):
             try:
                 logger.debug("[%s] - stop GPIO Input component on pin %s", self.__class__.__name__, self.values["pin"].instances[config]['data'])
                 GPIO.remove_event_detect(self.values["pin"].instances[config]['data'])
-            except:
+            except Exception:
                 logger.exception("[%s] - Exception when stopping GPIO component", self.__class__.__name__)
         GpioComponent.stop(self)
         return True
@@ -280,7 +280,7 @@ class PirComponent(InputComponent):
                                   GPIO.BOTH, \
                                   self.callback_pir, \
                                   self.values["bouncetime"].data)
-            except:
+            except Exception:
                 logger.exception("[%s] - Exception when starting PIR component", self.__class__.__name__)
         else:
             for config in range(configs):
@@ -291,7 +291,7 @@ class PirComponent(InputComponent):
                                       GPIO.BOTH, \
                                       self.callback_pir, \
                                       self.values["bouncetime"].instances[config]['data'])
-                except:
+                except Exception:
                     logger.exception("[%s] - Exception when starting PIR component", self.__class__.__name__)
         return True
 
@@ -306,7 +306,7 @@ class PirComponent(InputComponent):
                     break
                 time.sleep(0.001)
             gpio.add_event_detect(pin, edge, callback=callback, bouncetime=bouncetime)
-        except:
+        except Exception:
             logger.exception("[%s] - Exception when starting PIR component", self.__class__.__name__)
 
     def callback_pir(self, channel):
@@ -328,13 +328,13 @@ class PirComponent(InputComponent):
         if configs == 0:
             try:
                 self._bus.gpio.remove_event_detect(self.values["pin"].data)
-            except:
+            except Exception:
                 logger.exception("[%s] - Exception when stopping PIR component", self.__class__.__name__)
         else:
             for config in range(configs):
                 try:
                     self._bus.gpio.remove_event_detect(self.values["pin"].instances[config]['data'])
-                except:
+                except Exception:
                     logger.exception("[%s] - Exception when stopping PIR component", self.__class__.__name__)
         GpioComponent.stop(self)
         return True
@@ -407,14 +407,14 @@ class SonicComponent(InputComponent):
         if configs == 0:
             try:
                 self.trigger_sonic(self._bus.gpio, self.values["pin_trig"].data)
-            except:
+            except Exception:
                 logger.exception("[%s] - Exception when starting sonic component", self.__class__.__name__)
         else:
             for config in range(configs):
                 try:
                     # Send 10us pulse to trigger
                     self.trigger_sonic(self._bus.gpio, self.values["pin_trig"].instances[config]['data'])
-                except:
+                except Exception:
                     logger.exception("[%s] - Exception when starting sonic component", self.__class__.__name__)
 
     def start(self, mqttc):
@@ -431,7 +431,7 @@ class SonicComponent(InputComponent):
                                   GPIO.RISING, \
                                   self.callback_echo, \
                                   self.values["bouncetime"].data)
-            except:
+            except Exception:
                 logger.exception("[%s] - Exception when starting sonic component", self.__class__.__name__)
         else:
             for config in range(configs):
@@ -443,7 +443,7 @@ class SonicComponent(InputComponent):
                                       GPIO.RISING, \
                                       self.callback_echo, \
                                       self.values["bouncetime"].instances[config]['data'])
-                except:
+                except Exception:
                     logger.exception("[%s] - Exception when starting sonic component", self.__class__.__name__)
         self.on_check()
         return True
@@ -461,7 +461,7 @@ class SonicComponent(InputComponent):
                     break
                 time.sleep(0.1)
             gpio.add_event_detect(pin_echo, edge, callback=callback, bouncetime=bouncetime)
-        except:
+        except Exception:
             logger.exception("[%s] - Exception when setup_sonic component", self.__class__.__name__)
 
     def callback_echo(self, channel):
@@ -485,7 +485,7 @@ class SonicComponent(InputComponent):
             gpio.output(pin_trig, GPIO.LOW)
             self.echo_start = time.time()
             logger.debug("[%s] - Send trigger", self.__class__.__name__)
-        except:
+        except Exception:
             logger.exception("[%s] - Exception when trigger_sonic component", self.__class__.__name__)
 
     def stop(self):
@@ -500,13 +500,13 @@ class SonicComponent(InputComponent):
         if configs == 0:
             try:
                 self._bus.gpio.remove_event_detect(self.values["pin_echo"].data)
-            except:
+            except Exception:
                 logger.exception("[%s] - Exception when stopping sonic component", self.__class__.__name__)
         else:
             for config in range(configs):
                 try:
                     self._bus.gpio.remove_event_detect(self.values["pin_echo"].instances[config]['data'])
-                except:
+                except Exception:
                     logger.exception("[%s] - Exception when stopping sonic component", self.__class__.__name__)
         GpioComponent.stop(self)
         return True
@@ -542,7 +542,7 @@ class OutputComponent(GpioComponent):
             try:
                 logger.debug("[%s] - start GPIO Output component on pin %s", self.__class__.__name__, self.values["pin"].instances[config]['data'])
                 self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.OUT)
-            except:
+            except Exception:
                 logger.exception("[%s] - Exception when starting GPIO component", self.__class__.__name__)
         return True
 
@@ -556,7 +556,7 @@ class OutputComponent(GpioComponent):
             try:
                 logger.debug("[%s] - stop GPIO Output component on pin %s", self.__class__.__name__, self.values["pin"].instances[config]['data'])
                 self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.OUT)
-            except:
+            except Exception:
                 logger.exception("[%s] - Exception when stopping GPIO component", self.__class__.__name__)
         GpioComponent.stop(self)
         return True
@@ -570,7 +570,7 @@ class OutputComponent(GpioComponent):
                     self._bus.gpio.setup(self.values["pin"].instances[index]['data'], GPIO.HIGH)
                 else:
                     self._bus.gpio.setup(self.values["pin"].instances[index]['data'], GPIO.LOW)
-            except:
+            except Exception:
                 logger.exception("[%s] - Exception when updating GPIO component", self.__class__.__name__)
 
 class PwmComponent(GpioComponent):
@@ -730,7 +730,7 @@ class RGBComponent(GpioComponent):
             #~ try:
                 #~ logger.debug("[%s] - start GPIO Output component on pin %s", self.__class__.__name__, self.values["pin"].instances[config]['data'])
                 #~ self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.OUT)
-            #~ except:
+            #~ except Exception:
                 #~ logger.exception("[%s] - Exception when starting GPIO component", self.__class__.__name__)
         return True
 
@@ -744,7 +744,7 @@ class RGBComponent(GpioComponent):
             #~ try:
                 #~ logger.debug("[%s] - stop GPIO Output component on pin %s", self.__class__.__name__, self.values["pin"].instances[config]['data'])
                 #~ self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.OUT)
-            #~ except:
+            #~ except Exception:
                 #~ logger.exception("[%s] - Exception when stopping GPIO component", self.__class__.__name__)
         GpioComponent.stop(self)
         return True
@@ -808,7 +808,7 @@ class LedComponent(GpioComponent):
             try:
                 logger.debug("[%s] - start GPIO Output component on pin %s", self.__class__.__name__, self.values["pin"].instances[config]['data'])
                 self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.OUT)
-            except:
+            except Exception:
                 logger.exception("[%s] - Exception when starting GPIO component", self.__class__.__name__)
         return True
 
@@ -822,7 +822,7 @@ class LedComponent(GpioComponent):
             try:
                 logger.debug("[%s] - stop GPIO Output component on pin %s", self.__class__.__name__, self.values["pin"].instances[config]['data'])
                 self._bus.gpio.setup(self.values["pin"].instances[config]['data'], GPIO.OUT)
-            except:
+            except Exception:
                 logger.exception("[%s] - Exception when stopping GPIO component", self.__class__.__name__)
         GpioComponent.stop(self)
         return True
