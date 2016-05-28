@@ -133,7 +133,7 @@ class GpioComponent(JNTComponent):
     def __init__(self, **kwargs):
         """
         """
-        oid = kwargs.pop('oid', 'rpigpio.generic')
+        oid = kwargs.pop('oid', '%s.generic'%OID)
         name = kwargs.pop('name', "Input")
         product_name = kwargs.pop('product_name', "GPIO")
         product_type = kwargs.pop('product_type', "Software")
@@ -155,7 +155,7 @@ class InputComponent(GpioComponent):
         """
         """
         self._inputs = {}
-        oid = kwargs.pop('oid', 'rpigpio.input')
+        oid = kwargs.pop('oid', '%s.input'%OID)
         product_name = kwargs.pop('product_name', "Input GPIO")
         name = kwargs.pop('name', "Input GPIO")
         GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
@@ -262,7 +262,7 @@ class PirComponent(InputComponent):
         """
         """
         self._inputs = {}
-        oid = kwargs.pop('oid', 'rpigpio.pir')
+        oid = kwargs.pop('oid', '%s.pir'%OID)
         product_name = kwargs.pop('product_name', "PIR sensor")
         name = kwargs.pop('name', "PIR sensor")
         InputComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
@@ -346,7 +346,7 @@ class SonicComponent(InputComponent):
         """
         """
         self._inputs = {}
-        oid = kwargs.pop('oid', 'rpigpio.sonic')
+        oid = kwargs.pop('oid', '%s.sonic'%OID)
         product_name = kwargs.pop('product_name', "Sonic sensor")
         name = kwargs.pop('name', "Sonic sensori (HC-SR04)")
         InputComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
@@ -518,7 +518,7 @@ class OutputComponent(GpioComponent):
         """
         """
         self._inputs = {}
-        oid = kwargs.pop('oid', 'rpigpio.output')
+        oid = kwargs.pop('oid', '%s.output'%OID)
         product_name = kwargs.pop('product_name', "Output GPIO")
         name = kwargs.pop('name', "Output GPIO")
         GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
@@ -580,7 +580,7 @@ class PwmComponent(GpioComponent):
         """
         """
         self._inputs = {}
-        oid = kwargs.pop('oid', 'rpigpio.pwm')
+        oid = kwargs.pop('oid', '%s.pwm'%OID)
         product_name = kwargs.pop('product_name', "Output PWM")
         name = kwargs.pop('name', "Output PWM")
         GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
@@ -629,7 +629,7 @@ class ServoComponent(GpioComponent):
         """
         """
         self._inputs = {}
-        oid = kwargs.pop('oid', 'rpigpio.servo')
+        oid = kwargs.pop('oid', '%s.servo'%OID)
         product_name = kwargs.pop('product_name', "Servo")
         name = kwargs.pop('name', "Servo")
         GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
@@ -671,7 +671,7 @@ class RGBComponent(GpioComponent):
         """
         """
         self._inputs = {}
-        oid = kwargs.pop('oid', 'rpigpio.rgb')
+        oid = kwargs.pop('oid', '%s.rgb'%OID)
         product_name = kwargs.pop('product_name', "RGB PWM")
         name = kwargs.pop('name', "RGB PWM")
         GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
@@ -766,7 +766,7 @@ class LedComponent(GpioComponent):
         """
         """
         self._inputs = {}
-        oid = kwargs.pop('oid', 'rpigpio.rgb')
+        oid = kwargs.pop('oid', '%s.rgb'%OID)
         product_name = kwargs.pop('product_name', "RGB PWM")
         name = kwargs.pop('name', "RGB PWM")
         GpioComponent.__init__(self, oid=oid, name=name, product_name=product_name, **kwargs)
