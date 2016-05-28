@@ -28,3 +28,7 @@ A text in this section.
 Documentation
 =============
 You can browse online documentation here : https://bibi21000.github.io/janitoo_raspberry_gpio/.
+
+Tutorial
+========
+You can find a tutorial here : https://bibi21000.github.io/janitoo_tutorial/.
