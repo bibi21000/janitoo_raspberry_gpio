@@ -1,25 +1,10 @@
 # Makefile for janitoo
 #
 
-include ../janitoo/Makefile.janitoo
-
+include Makefile.janitoo
 -include Makefile.local
 
-NOSECOVER     = --cover-package=${MODULENAME} --with-coverage --cover-inclusive --cover-html --cover-html-dir=${BUILDDIR}/docs/html/tools/coverage --with-html --html-file=${BUILDDIR}/docs/html/tools/nosetests/index.html
-NOSEDOCKER     = --cover-package=${NOSEMODULES},${MODULENAME},${MOREMODULES} --with-coverage --cover-inclusive --with-xunit --xunit-testsuite-name=${MODULENAME}
-
 .PHONY: help check-tag clean all build develop install uninstall clean-doc doc certification tests pylint deps docker-tests
-
-help:
-	@echo "Please use \`make <target>' where <target> is one of"
-	@echo "  build           : build the module"
-	@echo "  develop         : install for developpers"
-	@echo "  install         : install for users"
-	@echo "  uninstall       : uninstall the module"
-	@echo "  deps            : install dependencies for users"
-	@echo "  doc   	    	 : make documentation"
-	@echo "  tests           : launch tests"
-	@echo "  clean           : clean the development directory"
 
 clean-dist:
 	-rm -rf $(DISTDIR)
