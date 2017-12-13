@@ -85,7 +85,7 @@ class TestGpioPir(JNTTComponent, JNTTComponentCommon):
         comp.setup_pir(gpio, 21, GPIO.RISING, comp.callback_pir, 200)
         time.sleep(5)
         dist = comp.values['status'].data
-        print "status", dist
+        print("status", dist)
         self.assertNotEqual(dist, None)
         self.assertTrue(comp.check_heartbeat())
         gpio.cleanup()
@@ -104,7 +104,7 @@ class TestGpioSonic(JNTTComponent, JNTTComponentCommon):
         comp.trigger_sonic(gpio, 20)
         time.sleep(1)
         dist = comp.values['status'].data
-        print "distance", dist
+        print("distance", dist)
         self.assertNotEqual(dist, None)
         self.assertTrue(comp.check_heartbeat())
         gpio.cleanup()

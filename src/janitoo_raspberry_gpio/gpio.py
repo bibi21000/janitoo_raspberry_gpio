@@ -284,7 +284,7 @@ class PirComponent(InputComponent):
                 logger.exception("[%s] - Exception when starting PIR component", self.__class__.__name__)
         else:
             for config in range(configs):
-                print "config :", config
+                print("config :", config)
                 try:
                     self.setup_pir( self._bus.gpio, \
                                       self.values["pin"].instances[config]['data'], \
@@ -435,7 +435,7 @@ class SonicComponent(InputComponent):
                 logger.exception("[%s] - Exception when starting sonic component", self.__class__.__name__)
         else:
             for config in range(configs):
-                print "config :", config
+                print("config :", config)
                 try:
                     self.setup_sonic( self._bus.gpio, \
                                       self.values["pin_trig"].instances[config]['data'], \
