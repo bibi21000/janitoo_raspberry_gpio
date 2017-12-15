@@ -12,7 +12,6 @@ clean-dist:
 clean: clean-doc
 	-rm -rf $(ARCHBASE)
 	-rm -rf $(BUILDDIR)
-	-rm -f generated_doc
 	-rm -f janidoc
 	-@find . -name \*.pyc -delete
 
