@@ -532,6 +532,14 @@ class OutputComponent(GpioComponent):
         poll_value = self.values[uuid].create_poll_value(default=60)
         self.values[poll_value.uuid] = poll_value
 
+        uuid="state"
+        self.values[uuid] = self.value_factory['sensor_byte'](
+            options=self.options,
+            uuid=uuid,
+            node_uuid=self.uuid,
+            get_data_cb=self.get_state,
+        )
+
     def start(self, mqttc):
         """Start the component.
 
@@ -567,11 +575,25 @@ class OutputComponent(GpioComponent):
         if index in self._inputs:
             try:
                 if data or data == 1 or data.lower() == 'on':
-                    self._bus.gpio.setup(self.values["pin"].instances[index]['data'], GPIO.HIGH)
+                    self._bus.gpio.output(self.values["pin"].instances[index]['data'], GPIO.HIGH)
                 else:
-                    self._bus.gpio.setup(self.values["pin"].instances[index]['data'], GPIO.LOW)
+                    self._bus.gpio.output(self.values["pin"].instances[index]['data'], GPIO.LOW)
             except Exception:
                 logger.exception("[%s] - Exception when updating GPIO component", self.__class__.__name__)
+
+    def get_state(self, node_uuid, index, data):
+        """
+        """
+        if index in self._inputs:
+            try:
+                if self._bus.gpio.is_high(self.values["pin"].instances[index]['data']):
+                    return 1
+                elif self._bus.gpio.is_low(self.values["pin"].instances[index]['data']):
+                    return 0
+                else:
+                    return None
+            except Exception:
+                logger.exception("[%s] - Exception when getting GPIO output component state", self.__class__.__name__)
 
 class PwmComponent(GpioComponent):
     """ A PWM component """
