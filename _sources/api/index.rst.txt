@@ -1,0 +1,30 @@
+janitoo_raspberry_gpio package
+==============================
+
+Submodules
+----------
+
+janitoo_raspberry_gpio.gpio module
+----------------------------------
+
+.. automodule:: janitoo_raspberry_gpio.gpio
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+janitoo_raspberry_gpio.thread_gpio module
+-----------------------------------------
+
+.. automodule:: janitoo_raspberry_gpio.thread_gpio
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: janitoo_raspberry_gpio
+    :members:
+    :undoc-members:
+    :show-inheritance:
