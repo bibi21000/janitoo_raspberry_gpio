@@ -106,20 +106,20 @@ class GpioBus(JNTBus):
         """
         return self.gpio is not None
 
-    def start(self, mqttc, trigger_thread_reload_cb=None):
+    def start(self, mqttc, trigger_thread_reload_cb=None, **kwargs):
         """Start the bus
         """
-        JNTBus.start(self, mqttc, trigger_thread_reload_cb)
+        JNTBus.start(self, mqttc, trigger_thread_reload_cb, **kwargs)
         try:
             self.gpio = GPIO.get_platform_gpio()
         except Exception:
             logger.exception("[%s] - Exception when starting GPIO bus", self.__class__.__name__)
         self.update_attrs('gpio', self.gpio)
 
-    def stop(self):
+    def stop(self, **kwargs):
         """Stop the bus
         """
-        JNTBus.stop(self)
+        JNTBus.stop(self, **kwargs)
         try:
             self.gpio.cleanup()
         except Exception:
