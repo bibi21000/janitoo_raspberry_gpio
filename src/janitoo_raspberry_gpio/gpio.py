@@ -189,11 +189,11 @@ class InputComponent(GpioComponent):
             label='trigger',
             default=True,
         )
-        uuid="status"
+        uuid="state"
         self.values[uuid] = self.value_factory['sensor_byte'](options=self.options, uuid=uuid,
             node_uuid=self.uuid,
-            help='The status of the GPIO',
-            label='Status',
+            help='The state of the GPIO',
+            label='State',
             get_data_cb=self.get_status,
         )
         poll_value = self.values[uuid].create_poll_value(default=60)
