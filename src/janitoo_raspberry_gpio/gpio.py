@@ -581,7 +581,7 @@ class OutputComponent(GpioComponent):
             except Exception:
                 logger.exception("[%s] - Exception when updating GPIO component", self.__class__.__name__)
 
-    def get_state(self, node_uuid, index, data):
+    def get_state(self, node_uuid, index):
         """
         """
         if index in self._inputs:
